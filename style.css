@@ -126,7 +126,8 @@ a { color: var(--green-dark); }
 .chip.type-D { background: var(--purple-soft); color: #5d4e79; }
 .chip-grade { background: #f5e7c8; color: #755c2d; }
 
-.filters { display: grid; grid-template-columns: 1.5fr repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+.filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+.filters #menu-search { grid-column: 1 / -1; }
 .filters input, .filters select { width: 100%; border: 1px solid var(--line); background: white; border-radius: 12px; padding: 8px 12px; }
 .result-count { margin: 0 0 10px; color: var(--muted); font-size: .86rem; }
 
@@ -224,7 +225,7 @@ footer { min-height: 64px; display: flex; justify-content: space-between; gap: 1
 
 @media (max-width: 600px) {
   .site-header { position: static; padding: 8px 12px; }
-  .brand small, .grade-picker { display: none; }
+  .brand small { display: none; }
   #app { width: min(100% - 20px, 520px); padding-top: 12px; }
   .hero { display: block; min-height: 0; padding: 20px; }
   .hero-image { position: absolute; right: -20px; bottom: -5px; width: 145px; height: 115px; opacity: .28; }
