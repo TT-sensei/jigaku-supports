@@ -146,6 +146,20 @@ a { color: var(--green-dark); }
 .notebook-launch .notebook-icon { display: block; font-size: 2.4rem; margin-bottom: 4px; }
 .notebook-launch strong { display: block; font-size: clamp(1.25rem, 2.5vw, 1.7rem); }
 .notebook-launch p { margin: 6px 0 16px; color: #e5f0e9; }
+.study-timer { margin: 22px 24px 0; padding: 18px; border: 1px solid var(--line); border-radius: 18px; background: #fffaf0; }
+.timer-heading { display: flex; align-items: center; gap: 10px; }
+.timer-icon { font-size: 1.8rem; }
+.timer-heading h2 { margin: 0; font-size: 1.15rem; }
+.timer-heading p { margin: 2px 0 0; color: var(--muted); font-size: .84rem; }
+.timer-controls { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+.timer-controls label { color: var(--muted); font-size: .82rem; font-weight: 800; }
+.timer-controls input { width: 78px; border: 1px solid var(--line); border-radius: 10px; padding: 7px 8px; text-align: center; background: white; }
+.timer-controls strong { margin-left: auto; color: var(--green-dark); font-variant-numeric: tabular-nums; font-size: clamp(1.8rem, 4vw, 2.5rem); letter-spacing: .06em; }
+.timer-controls strong.is-finished { color: var(--orange); }
+.timer-status { margin: 8px 0 0; color: var(--muted); font-size: .84rem; }
+.timer-goal { margin: 10px 0 0; padding: 9px 11px; border-radius: 10px; color: #745629; background: #f8e8b8; font-weight: 900; }
+.timer-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.timer-buttons button { padding: 8px 14px; }
 .side-coach { position: sticky; top: 88px; text-align: center; }
 .side-coach img { width: 145px; height: 145px; object-fit: contain; }
 .speech { position: relative; margin: -4px 0 14px; padding: 12px; background: white; border: 1px solid var(--line); border-radius: 14px; font-weight: 800; }
@@ -251,6 +265,9 @@ footer { min-height: 64px; display: flex; justify-content: space-between; gap: 1
   .side-coach { position: static; display: grid; grid-template-columns: 90px 1fr; align-items: center; }
   .side-coach img { width: 90px; height: 90px; }
   .material-list { grid-column: 1 / -1; }
+  .study-timer { margin: 18px 15px 0; }
+  .timer-controls { flex-wrap: wrap; }
+  .timer-controls strong { width: 100%; margin-left: 0; }
   .guide-flow { grid-template-columns: 1fr; overflow: visible; }
   .guide-flow div { min-height: 58px; grid-template-columns: 40px 1fr; justify-items: start; padding: 10px 18px; }
   .test-item, .record-item { grid-template-columns: auto 1fr; }
