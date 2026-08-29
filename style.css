@@ -27,7 +27,7 @@ body {
   min-height: 100vh; margin: 0; color: var(--ink); font-family: var(--jp);
   background:
     linear-gradient(rgb(248 241 223 / .9), rgb(248 241 223 / .96)),
-    url("https://tt-sensei.github.io/navi-character-/assets/web/backgrounds/daily/daily-classroom.webp") center / cover fixed;
+  url("https://tt-sensei.github.io/navi-character-/assets/web/backgrounds/daily/daily-bedroom.webp") center / cover fixed;
 }
 button, input, select { font: inherit; }
 button, select, input { min-height: 44px; }
