@@ -21,12 +21,12 @@ const HERO_IMAGES = [
 ];
 
 const PURPOSES = [
-  { id: 'review', label: '今日習ったことをもう一度', value: '復習', icon: '↩' },
-  { id: 'weak', label: '苦手なところをやりたい', value: '苦手', icon: '△' },
-  { id: 'memorize', label: '覚えたい', value: '覚える', icon: '□' },
-  { id: 'explore', label: 'もっと知りたい', value: 'もっと知る', icon: '?' },
-  { id: 'test', label: 'テストの準備', value: 'テスト', icon: '✓' },
-  { id: 'any', label: '何でもいい！', value: '何でも', icon: '○' }
+  { id: 'review', label: '今日習ったことをもう一度', value: '復習', character: 'riku' },
+  { id: 'weak', label: '苦手なところをやりたい', value: '苦手', character: 'nami' },
+  { id: 'memorize', label: '覚えたい', value: '覚える', character: 'kai' },
+  { id: 'explore', label: 'もっと知りたい', value: 'もっと知る', character: 'sora' },
+  { id: 'test', label: 'テストの準備', value: 'テスト', character: 'tsuki' },
+  { id: 'any', label: '何でもいい！', value: '何でも', character: 'saku' }
 ];
 const TIMES = [
   { id: 'short', label: '10分くらい', minutes: 10, range: [0, 12] },
@@ -151,7 +151,7 @@ function renderDecide() {
     <div class="panel">
       <div class="choice-step active" data-step="1">
         <span class="step-kicker">STEP 1 / 3</span><h2>今日は、どんな感じ？</h2>
-        <div class="choice-grid">${PURPOSES.map(item => `<button class="choice-button ${state.coach.purpose === item.id ? 'selected' : ''}" type="button" data-coach-purpose="${item.id}"><span aria-hidden="true">${item.icon}</span><br>${item.label}</button>`).join('')}</div>
+        <div class="choice-grid">${PURPOSES.map(item => `<button class="choice-button ${state.coach.purpose === item.id ? 'selected' : ''}" type="button" data-coach-purpose="${item.id}"><img class="choice-character" src="${IMG_ROOT}characters/${item.character}/expressions/01-normal-smile.webp" alt="" aria-hidden="true"><span class="choice-label">${item.label}</span></button>`).join('')}</div>
         <div class="coach-nav"><span></span><button class="primary-button" type="button" data-coach-next="2" ${state.coach.purpose ? '' : 'disabled'}>つぎへ →</button></div>
       </div>
       <div class="choice-step" data-step="2">
