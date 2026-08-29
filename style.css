@@ -95,7 +95,9 @@ a { color: var(--green-dark); }
 .step-kicker { color: var(--orange); font-size: .8rem; font-weight: 900; letter-spacing: .09em; }
 .choice-step h2 { margin: 6px 0 18px; font-size: clamp(1.35rem, 3vw, 1.85rem); }
 .choice-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.choice-button { min-height: 82px; border: 2px solid transparent; border-radius: 16px; padding: 13px; background: var(--green-soft); font-weight: 800; cursor: pointer; }
+.choice-button { min-height: 98px; display: flex; align-items: center; gap: 12px; border: 2px solid transparent; border-radius: 16px; padding: 10px 16px 10px 10px; background: var(--green-soft); font-weight: 800; cursor: pointer; text-align: left; }
+.choice-character { width: 70px; height: 70px; flex: 0 0 70px; object-fit: contain; border-radius: 50%; }
+.choice-label { flex: 1; text-align: center; line-height: 1.35; }
 .choice-button:hover, .choice-button.selected { border-color: var(--green); background: #d8e9dc; }
 .choice-button.subject-japanese { background: #f5e5e2; }
 .choice-button.subject-math { background: #e3edf7; }
@@ -240,7 +242,8 @@ footer { min-height: 64px; display: flex; justify-content: space-between; gap: 1
   .subnav { grid-template-columns: 1fr; }
   .choice-grid, .card-grid, .type-grid, .resource-grid, .form-grid, .record-summary { grid-template-columns: 1fr; }
   .choice-grid { gap: 8px; }
-  .choice-button { min-height: 62px; }
+  .choice-button { min-height: 78px; padding-right: 10px; }
+  .choice-character { width: 54px; height: 54px; flex-basis: 54px; }
   .filters { grid-template-columns: 1fr 1fr; }
   .filters input { grid-column: 1 / -1; }
   .coach-layout { grid-template-columns: 1fr; }
