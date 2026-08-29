@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f8f1df">
+  <meta name="description" content="紙のノートで、自分らしい家庭学習を始めるための小学生向け自学コーチ">
+  <title>自学コーチ</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#app">本文へ</a>
+  <header class="site-header">
+    <button class="brand" type="button" data-route="home" aria-label="自学コーチのホームへ">
+      <span class="brand-mark" aria-hidden="true">ノ</span>
+      <span><strong>自学コーチ</strong><small>ノートで学ぶ力を育てよう</small></span>
+    </button>
+    <nav class="header-actions" aria-label="共通メニュー">
+      <label class="grade-picker">学年
+        <select id="grade-select" aria-label="学年を選ぶ">
+          <option value="3">3年生</option><option value="4">4年生</option>
+          <option value="5">5年生</option><option value="6">6年生</option>
+        </select>
+      </label>
+      <button class="home-button" type="button" data-route="home">⌂ ホーム</button>
+    </nav>
+  </header>
+
+  <main id="app" tabindex="-1" aria-live="polite"></main>
+
+  <footer>
+    <span>短くても、自分で考えて「分かった！」が増えれば、いい自学。</span>
+    <span>記録はこの端末だけに保存されます。</span>
+  </footer>
+
+  <template id="modal-template">
+    <div class="modal-backdrop" role="presentation">
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <button class="modal-close" type="button" aria-label="閉じる">×</button>
+        <div class="modal-content"></div>
+      </section>
+    </div>
+  </template>
+
+  <noscript><p class="noscript">このアプリを使うにはJavaScriptを有効にしてください。</p></noscript>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
