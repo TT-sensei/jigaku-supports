@@ -44,7 +44,7 @@ const RESOURCES = [
   { group: 'video', title: 'eboard', desc: '小学生向けの算数・理科・社会・漢字を、映像授業と問題で確かめられます。', url: 'https://www.eboard.jp/list/', subject: '国語・算数・理科・社会' },
   { group: 'practice', title: '東京ベーシック・ドリル（電子版）', desc: '学年と教科を選んで、基礎的な問題に取り組めます。', url: 'https://www.kyoiku.metro.tokyo.lg.jp/school/study_material/improvement/tokyo_basic_drill/about', subject: '国語・算数・社会・理科' },
   { group: 'practice', title: 'eboard', desc: '単元ごとの短い映像と確認問題で、分からないところを戻って確かめられます。', url: 'https://www.eboard.jp/list/', subject: '国語・算数・理科・社会' },
-  { group: 'print', title: '東京ベーシック・ドリル（プリント教材）', desc: '教科・学年・学習内容を選び、問題と答えのPDFを印刷できます。', url: 'https://www.kyoiku.metro.tokyo.lg.jp/school/study_material/improvement/tokyo_basic_drill/about', subject: '国語・算数・社会・理科' },
+  { group: 'print', title: '東京ベーシック・ドリル（プリント教材）', desc: '教科・学年・学習内容を選び、問題と答えのPDFを印刷できます。', url: 'https://gimukyo.ysn21.jp/gakushi/index.php#print', subject: '国語・算数・社会・理科' },
   { group: 'app', title: 'Learning Portal', desc: '学年や教科から、自分に合う学習アプリを選べます。', url: 'https://tt-sensei.github.io/learning-portal/', subject: 'いろいろ' },
   { group: 'app', title: '漢字マスター', desc: '漢字を練習したいときに。終わったら、間違えた一字をノートに残そう。', url: 'https://tt-sensei.github.io/kanjiapp/', subject: '国語' },
   { group: 'app', title: '単位研究所', desc: '長さ・かさ・重さなどの単位を確かめたいときに。気付いた関係を一つノートへ。', url: 'https://tt-sensei.github.io/tanilabo/', subject: '算数' },
