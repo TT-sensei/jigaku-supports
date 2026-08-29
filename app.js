@@ -62,6 +62,8 @@ let state = {
   resourceGroup: 'video'
 };
 let lastHeroImage = '';
+let timerState = { totalSeconds: 30 * 60, remainingSeconds: 30 * 60, running: false, finished: false, startedAt: null, interval: null };
+const freshTimerState = () => ({ totalSeconds: 30 * 60, remainingSeconds: 30 * 60, running: false, finished: false, startedAt: null, interval: null });
 
 const esc = value => String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 const todayString = () => {
@@ -92,6 +94,10 @@ function saveSettings() {
 }
 
 function navigate(route, data = {}) {
+  if (route !== 'coach') {
+    clearInterval(timerState.interval);
+    timerState = freshTimerState();
+  }
   state.route = route;
   Object.assign(state, data);
   render();
@@ -267,6 +273,79 @@ function coachSteps(menu) {
   return [...common, ...specific, { title: '確かめ方を決める', text: menu.type === 'C' ? '本や二つ以上の資料で、予想と比べて確かめよう。' : menu.type === 'B' ? '教科書や資料と見比べ、足りないところを一つ直そう。' : '答えや教科書で確かめ、間違いがあれば直そう。' }];
 }
 
+function formatTimer(seconds) {
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`;
+}
+
+function timerElapsedMinutes(menu) {
+  if (!timerState.startedAt) return menu.minutes;
+  return Math.max(1, Math.ceil((timerState.totalSeconds - timerState.remainingSeconds) / 60));
+}
+
+function updateTimerView() {
+  const display = app.querySelector('#timer-display');
+  const status = app.querySelector('#timer-status');
+  const goal = app.querySelector('#timer-goal');
+  const start = app.querySelector('#timer-start');
+  const pause = app.querySelector('#timer-pause');
+  const reset = app.querySelector('#timer-reset');
+  if (!display) return;
+  display.textContent = formatTimer(timerState.remainingSeconds);
+  display.classList.toggle('is-finished', timerState.finished);
+  if (status) status.textContent = timerState.finished ? '目標達成！ここまでの学習を振り返ろう。' : timerState.running ? '集中して取り組んでいます。' : timerState.startedAt ? '一時停止中です。' : '時間を決めて、ノートで始めよう。';
+  if (goal) goal.hidden = !timerState.finished;
+  if (start) start.disabled = timerState.running;
+  if (pause) pause.disabled = !timerState.running;
+  if (reset) reset.disabled = timerState.running;
+}
+
+function startTimer() {
+  const input = app.querySelector('#timer-minutes');
+  if (!timerState.startedAt || timerState.finished) {
+    const minutes = Math.min(180, Math.max(1, Number(input?.value) || 30));
+    if (input) input.value = String(minutes);
+    timerState.totalSeconds = minutes * 60;
+    timerState.remainingSeconds = timerState.totalSeconds;
+    timerState.finished = false;
+    timerState.startedAt = Date.now();
+  }
+  timerState.running = true;
+  clearInterval(timerState.interval);
+  timerState.interval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - timerState.startedAt) / 1000);
+    timerState.remainingSeconds = Math.max(0, timerState.totalSeconds - elapsed);
+    if (timerState.remainingSeconds === 0) {
+      clearInterval(timerState.interval);
+      timerState.interval = null;
+      timerState.running = false;
+      timerState.finished = true;
+    }
+    updateTimerView();
+  }, 250);
+  updateTimerView();
+}
+
+function pauseTimer() {
+  if (!timerState.running) return;
+  timerState.remainingSeconds = Math.max(0, timerState.remainingSeconds);
+  timerState.startedAt = Date.now() - (timerState.totalSeconds - timerState.remainingSeconds) * 1000;
+  clearInterval(timerState.interval);
+  timerState.interval = null;
+  timerState.running = false;
+  updateTimerView();
+}
+
+function resetTimer() {
+  clearInterval(timerState.interval);
+  const input = app.querySelector('#timer-minutes');
+  const minutes = Math.min(180, Math.max(1, Number(input?.value) || 30));
+  if (input) input.value = String(minutes);
+  timerState = { totalSeconds: minutes * 60, remainingSeconds: minutes * 60, running: false, finished: false, startedAt: null, interval: null };
+  updateTimerView();
+}
+
 function renderCoach() {
   const menu = state.activeMenu || MENUS[0];
   const steps = coachSteps(menu);
@@ -277,7 +356,14 @@ function renderCoach() {
       <article class="coach-card">
         <header class="coach-card-head"><div class="chips"><span class="chip">${subjectLabel(menu.subject)}</span><span class="chip chip-grade">${gradeLabel(menu.grades)}</span><span class="chip type-${menu.type}">${typeLabel(menu.type)}</span><span class="chip">${difficultyStars(menu.difficulty)} ${menu.difficulty === 1 ? 'すぐできる' : menu.difficulty === 2 ? 'しっかり' : 'チャレンジ'}</span></div><h1>${esc(menu.title)}</h1><p>${esc(menu.instruction)}</p></header>
         <ol class="step-list">${steps.map(step => `<li class="step-item"><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p>${step.goal ? `<div class="goal-box"><strong>めあての例</strong><br>「${esc(step.goal)}」</div>` : ''}</li>`).join('')}</ol>
-        <div class="notebook-launch"><span class="notebook-icon" aria-hidden="true">📓</span><strong>ここからはノートでやってみよう！</strong><p>画面を閉じてOK。終わったら、ここに戻ってこよう。</p><button class="primary-button" type="button" id="finish-menu">できた！</button></div>
+        <div class="study-timer" aria-label="自学タイマー">
+          <div class="timer-heading"><span class="timer-icon" aria-hidden="true">⏱</span><div><h2>自学タイマー</h2><p>何分取り組むか、自分で決めよう。</p></div></div>
+          <div class="timer-controls"><label for="timer-minutes">時間（分）</label><input id="timer-minutes" type="number" min="1" max="180" step="1" value="${Math.max(1, Math.round(timerState.totalSeconds / 60))}" ${timerState.startedAt ? 'disabled' : ''}><strong id="timer-display" aria-live="polite">${formatTimer(timerState.remainingSeconds)}</strong></div>
+          <p id="timer-status" class="timer-status">${timerState.finished ? '目標達成！ここまでの学習を振り返ろう。' : timerState.running ? '集中して取り組んでいます。' : timerState.startedAt ? '一時停止中です。' : '時間を決めて、ノートで始めよう。'}</p>
+          <p id="timer-goal" class="timer-goal" ${timerState.finished ? '' : 'hidden'}>目標達成！おつかれさま。音は鳴りません。</p>
+          <div class="timer-buttons"><button class="primary-button" type="button" id="timer-start">スタート</button><button class="secondary-button" type="button" id="timer-pause" ${timerState.running ? '' : 'disabled'}>一時停止</button><button class="secondary-button" type="button" id="timer-reset" ${timerState.running ? 'disabled' : ''}>リセット</button></div>
+        </div>
+        <div class="notebook-launch"><span class="notebook-icon" aria-hidden="true">📓</span><strong>ここからはノートでやってみよう！</strong><p>画面を閉じてOK。終わったら、ここに戻ってこよう。</p><button class="primary-button" type="button" id="finish-menu">今日の自学を終わる</button></div>
       </article>
       <aside class="side-coach">
         <div><img src="${character}" alt="ノートを確かめる案内役"><span class="image-fallback" aria-hidden="true">📓</span></div>
@@ -290,6 +376,7 @@ function renderCoach() {
 }
 
 function openFinishModal(menu) {
+  const duration = timerElapsedMinutes(menu);
   const template = document.querySelector('#modal-template');
   const fragment = template.content.cloneNode(true);
   const backdrop = fragment.querySelector('.modal-backdrop');
@@ -306,12 +393,12 @@ function openFinishModal(menu) {
   liveBackdrop.querySelector('[data-check="checked"]').addEventListener('click', () => {
     liveBackdrop.querySelectorAll('[data-check]').forEach(button => button.classList.toggle('selected', button.dataset.check === 'checked'));
     liveBackdrop.querySelector('#finish-next').innerHTML = `<p><strong>間違いはあった？</strong></p><div class="check-options"><button type="button" data-mistake="yes">あった</button><button type="button" data-mistake="no">なかった</button></div>`;
-    liveBackdrop.querySelectorAll('[data-mistake]').forEach(button => button.addEventListener('click', () => showReflection(liveBackdrop, menu, button.dataset.mistake === 'yes')));
+    liveBackdrop.querySelectorAll('[data-mistake]').forEach(button => button.addEventListener('click', () => showReflection(liveBackdrop, menu, button.dataset.mistake === 'yes', duration)));
   });
   liveBackdrop.querySelector('.modal-close').focus();
 }
 
-function showReflection(modal, menu, hadMistake) {
+function showReflection(modal, menu, hadMistake, duration) {
   const target = modal.querySelector('#finish-next');
   target.innerHTML = `${hadMistake ? '<div class="reflection-box"><strong>間違いは大事なヒント。</strong><p>答えを写すだけでなく、どこで考えが変わったか確かめよう。</p></div>' : ''}
     <div class="reflection-box"><strong>最後に、ノートで振り返ろう</strong><ul>${menu.reflectionPrompts.map(prompt => `<li>${esc(prompt)}</li>`).join('')}</ul><p>全部書かなくても大丈夫。一つ選ぼう。</p></div>
@@ -319,7 +406,7 @@ function showReflection(modal, menu, hadMistake) {
     <button class="primary-button" type="button" id="save-completion">${hadMistake ? '直して、今日はおわり' : '今日はおわり'}</button>`;
   target.querySelector('#save-completion').addEventListener('click', () => {
     const records = getRecords();
-    records.push({ date: todayString(), subject: menu.subject, menuId: menu.id, minutes: menu.minutes, completed: true });
+    records.push({ date: todayString(), subject: menu.subject, menuId: menu.id, minutes: duration, completed: true });
     storage.save('records', records.slice(-500));
     modal.remove();
     showDone(menu);
@@ -420,6 +507,8 @@ function render() {
 function bindEvents() {
   app.querySelectorAll('[data-route]').forEach(button => button.addEventListener('click', () => navigate(button.dataset.route)));
   app.querySelectorAll('[data-menu-id]').forEach(button => button.addEventListener('click', () => {
+    clearInterval(timerState.interval);
+    timerState = freshTimerState();
     state.activeMenu = MENUS.find(menu => menu.id === button.dataset.menuId);
     navigate('coach');
   }));
@@ -445,6 +534,10 @@ function bindEvents() {
   app.querySelector('#show-candidates')?.addEventListener('click', chooseCandidates);
   app.querySelector('#rechoose')?.addEventListener('click', chooseCandidates);
   app.querySelector('#finish-menu')?.addEventListener('click', () => openFinishModal(state.activeMenu));
+  app.querySelector('#timer-start')?.addEventListener('click', startTimer);
+  app.querySelector('#timer-pause')?.addEventListener('click', pauseTimer);
+  app.querySelector('#timer-reset')?.addEventListener('click', resetTimer);
+  app.querySelector('#timer-minutes')?.addEventListener('change', resetTimer);
   app.querySelector('#menu-search')?.addEventListener('input', event => { state.menuFilters.query = event.target.value; rerenderMenuResults(); });
   app.querySelector('#filter-grade')?.addEventListener('change', event => { state.menuFilters.grade = event.target.value; render(); });
   app.querySelector('#filter-subject')?.addEventListener('change', event => { state.menuFilters.subject = event.target.value; render(); });
