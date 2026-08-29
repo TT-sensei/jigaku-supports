@@ -40,7 +40,7 @@
 
 ## 技術
 
-HTML / CSS / Vanilla JavaScriptのみ。ビルド不要でGitHub Pagesから動作します。保存には `edu-components` の `StorageManager` を使い、`edu:jigaku-coach-v1:*` のnamespaceに集約しています。
+HTML / CSS / Vanilla JavaScriptのみ。ビルド不要でGitHub Pagesから動作します。保存には `edu-components` の `StorageManager` をローカル同梱して使い、`edu:jigaku-coach-v1:*` のnamespaceに集約しています。
 
 Web画像は `navi-character-` の実在する軽量WebPを参照し、画像が読み込めない場合も学習導線は止まりません。
 

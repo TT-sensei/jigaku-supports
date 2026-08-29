@@ -1,4 +1,4 @@
-import { StorageManager } from 'https://tt-sensei.github.io/edu-components/index.js';
+import { StorageManager } from './vendor/storage-manager.js';
 import { MENUS, MENU_TYPES, SUBJECTS, DATA_COUNTS } from './data/menus.js';
 
 const storage = new StorageManager('jigaku-coach-v1');
