@@ -5,6 +5,20 @@ const storage = new StorageManager('jigaku-coach-v1');
 const app = document.querySelector('#app');
 const gradeSelect = document.querySelector('#grade-select');
 const IMG_ROOT = 'https://tt-sensei.github.io/navi-character-/assets/web/';
+const HERO_IMAGES = [
+  'groups/learning/group-learning-pair-balance.webp',
+  'groups/learning/group-learning-pair-blackboard.webp',
+  'groups/learning/group-learning-pair-carry-tools.webp',
+  'groups/learning/group-learning-pair-consulting.webp',
+  'groups/learning/group-learning-pair-diagram.webp',
+  'groups/learning/group-learning-pair-exchange.webp',
+  'groups/learning/group-learning-pair-map.webp',
+  'groups/learning/group-learning-pair-measure-length.webp',
+  'groups/learning/group-learning-pair-measure-shadow.webp',
+  'groups/learning/group-learning-pair-observation.webp',
+  'groups/learning/group-learning-pair-reading.webp',
+  'groups/learning/group-learning-pair-tablet.webp'
+];
 
 const PURPOSES = [
   { id: 'review', label: '今日習ったことをもう一度', value: '復習', icon: '↩' },
@@ -47,6 +61,7 @@ let state = {
   menuFilters: { query: '', subject: 'all', type: 'all', minutes: 'all' },
   resourceGroup: 'video'
 };
+let lastHeroImage = '';
 
 const esc = value => String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 const todayString = () => {
@@ -63,6 +78,13 @@ const getTests = () => storage.load('tests', []).filter(item => item && item.id 
 const subjectLabel = id => SUBJECTS[id]?.label || id;
 const typeLabel = id => MENU_TYPES[id]?.label || id;
 const difficultyStars = n => '★'.repeat(n);
+const gradeLabel = grades => grades.map(grade => `${grade}年`).join('・');
+const pickHeroImage = () => {
+  const candidates = HERO_IMAGES.filter(image => image !== lastHeroImage);
+  const image = candidates[Math.floor(Math.random() * candidates.length)] || HERO_IMAGES[0];
+  lastHeroImage = image;
+  return `${IMG_ROOT}${image}`;
+};
 const imageFallback = event => { event.currentTarget.hidden = true; event.currentTarget.nextElementSibling?.classList.remove('image-fallback'); };
 
 function saveSettings() {
@@ -95,7 +117,7 @@ function renderHome() {
         <p>自分で決めたら、ノートを開いて始めよう。</p>
       </div>
       <div>
-        <img class="hero-image" src="${IMG_ROOT}groups/learning/group-learning-pair-consulting.webp" alt="二人で学習の相談をしている様子">
+        <img class="hero-image" src="${pickHeroImage()}" alt="二人で学習している様子">
         <span class="image-fallback" aria-hidden="true">📓</span>
       </div>
     </div>
@@ -193,7 +215,7 @@ function recommendationMessage() {
 
 function menuCard(menu) {
   return `<article class="menu-card">
-    <div class="chips"><span class="chip">${subjectLabel(menu.subject)}</span><span class="chip type-${menu.type}">${typeLabel(menu.type)}</span><span class="chip">${menu.minutes}分</span><span class="chip" aria-label="手間の目安 ${menu.difficulty}段階">${difficultyStars(menu.difficulty)}</span></div>
+    <div class="chips"><span class="chip">${subjectLabel(menu.subject)}</span><span class="chip chip-grade">${gradeLabel(menu.grades)}</span><span class="chip type-${menu.type}">${typeLabel(menu.type)}</span><span class="chip">${menu.minutes}分</span><span class="chip" aria-label="手間の目安 ${menu.difficulty}段階">${difficultyStars(menu.difficulty)}</span></div>
     <h3>${esc(menu.title)}</h3><p>${esc(menu.whenToUse)}</p>
     <button class="primary-button" type="button" data-menu-id="${menu.id}">これにする</button>
   </article>`;
@@ -250,7 +272,7 @@ function renderCoach() {
     ${screenHead(menu.title, `${subjectLabel(menu.subject)}・${typeLabel(menu.type)}・${menu.minutes}分くらい`, state.candidates.length ? 'candidates' : 'menus')}
     <div class="coach-layout">
       <article class="coach-card">
-        <header class="coach-card-head"><div class="chips"><span class="chip">${subjectLabel(menu.subject)}</span><span class="chip type-${menu.type}">${typeLabel(menu.type)}</span><span class="chip">${difficultyStars(menu.difficulty)} ${menu.difficulty === 1 ? 'すぐできる' : menu.difficulty === 2 ? 'しっかり' : 'チャレンジ'}</span></div><h1>${esc(menu.title)}</h1><p>${esc(menu.instruction)}</p></header>
+        <header class="coach-card-head"><div class="chips"><span class="chip">${subjectLabel(menu.subject)}</span><span class="chip chip-grade">${gradeLabel(menu.grades)}</span><span class="chip type-${menu.type}">${typeLabel(menu.type)}</span><span class="chip">${difficultyStars(menu.difficulty)} ${menu.difficulty === 1 ? 'すぐできる' : menu.difficulty === 2 ? 'しっかり' : 'チャレンジ'}</span></div><h1>${esc(menu.title)}</h1><p>${esc(menu.instruction)}</p></header>
         <ol class="step-list">${steps.map(step => `<li class="step-item"><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p>${step.goal ? `<div class="goal-box"><strong>めあての例</strong><br>「${esc(step.goal)}」</div>` : ''}</li>`).join('')}</ol>
         <div class="notebook-launch"><span class="notebook-icon" aria-hidden="true">📓</span><strong>ここからはノートでやってみよう！</strong><p>画面を閉じてOK。終わったら、ここに戻ってこよう。</p><button class="primary-button" type="button" id="finish-menu">できた！</button></div>
       </article>
@@ -399,9 +421,23 @@ function bindEvents() {
     state.activeMenu = MENUS.find(menu => menu.id === button.dataset.menuId);
     navigate('coach');
   }));
-  app.querySelectorAll('[data-coach-purpose]').forEach(button => button.addEventListener('click', () => { state.coach.purpose = button.dataset.coachPurpose; render(); }));
-  app.querySelectorAll('[data-coach-time]').forEach(button => button.addEventListener('click', () => { state.coach.time = button.dataset.coachTime; render(); showCoachStep(2); }));
-  app.querySelectorAll('[data-coach-subject]').forEach(button => button.addEventListener('click', () => { state.coach.subject = button.dataset.coachSubject; render(); showCoachStep(3); }));
+  app.querySelectorAll('[data-coach-purpose]').forEach(button => button.addEventListener('click', () => {
+    state.coach.purpose = button.dataset.coachPurpose;
+    app.querySelectorAll('[data-coach-purpose]').forEach(item => item.classList.toggle('selected', item === button));
+    app.querySelector('[data-coach-next="2"]')?.removeAttribute('disabled');
+  }));
+  app.querySelectorAll('[data-coach-time]').forEach(button => button.addEventListener('click', () => {
+    state.coach.time = button.dataset.coachTime;
+    app.querySelectorAll('[data-coach-time]').forEach(item => item.classList.toggle('selected', item === button));
+    app.querySelector('[data-coach-next="3"]')?.removeAttribute('disabled');
+    showCoachStep(2);
+  }));
+  app.querySelectorAll('[data-coach-subject]').forEach(button => button.addEventListener('click', () => {
+    state.coach.subject = button.dataset.coachSubject;
+    app.querySelectorAll('[data-coach-subject]').forEach(item => item.classList.toggle('selected', item === button));
+    app.querySelector('#show-candidates')?.removeAttribute('disabled');
+    showCoachStep(3);
+  }));
   app.querySelectorAll('[data-coach-next]').forEach(button => button.addEventListener('click', () => showCoachStep(Number(button.dataset.coachNext))));
   app.querySelectorAll('[data-coach-back]').forEach(button => button.addEventListener('click', () => showCoachStep(Number(button.dataset.coachBack))));
   app.querySelector('#show-candidates')?.addEventListener('click', chooseCandidates);
