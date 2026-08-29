@@ -3,7 +3,6 @@ import { MENUS, MENU_TYPES, SUBJECTS, DATA_COUNTS } from './data/menus.js';
 
 const storage = new StorageManager('jigaku-coach-v1');
 const app = document.querySelector('#app');
-const gradeSelect = document.querySelector('#grade-select');
 const IMG_ROOT = 'https://tt-sensei.github.io/navi-character-/assets/web/';
 const HERO_IMAGES = [
   'groups/learning/group-learning-pair-balance.webp',
@@ -59,7 +58,7 @@ let state = {
   coach: { purpose: null, time: null, subject: null },
   candidates: [],
   activeMenu: null,
-  menuFilters: { query: '', subject: 'all', type: 'all', minutes: 'all' },
+  menuFilters: { query: '', grade: 'all', subject: 'all', type: 'all', minutes: 'all' },
   resourceGroup: 'video'
 };
 let lastHeroImage = '';
@@ -233,7 +232,8 @@ function renderCandidates() {
 
 function getFilteredMenus() {
   const f = state.menuFilters;
-  return MENUS.filter(menu => menu.grades.includes(state.grade))
+  return MENUS
+    .filter(menu => f.grade === 'all' || (f.grade === '12' ? menu.grades.some(grade => grade === 1 || grade === 2) : menu.grades.includes(Number(f.grade))))
     .filter(menu => f.subject === 'all' || menu.subject === f.subject)
     .filter(menu => f.type === 'all' || menu.type === f.type)
     .filter(menu => f.minutes === 'all' || (f.minutes === '10' ? menu.minutes <= 12 : f.minutes === '20' ? menu.minutes >= 13 && menu.minutes <= 22 : menu.minutes >= 23))
@@ -242,10 +242,12 @@ function getFilteredMenus() {
 
 function renderMenus() {
   const menus = getFilteredMenus();
+  const gradeLead = state.menuFilters.grade === 'all' ? 'すべての学年' : state.menuFilters.grade === '12' ? '1・2年生' : `${state.menuFilters.grade}年生`;
   return `<section class="screen">
-    ${screenHead('自学メニューから探す', `${state.grade}年生ができるメニューを表示しています。全体では100メニューです。`)}
+    ${screenHead('自学メニューから探す', `${gradeLead}のメニューを表示しています。全体では100メニューです。`)}
     <div class="filters">
       <input id="menu-search" type="search" placeholder="ことばで探す" value="${esc(state.menuFilters.query)}" aria-label="メニューを検索">
+      <select id="filter-grade" aria-label="学年でしぼる"><option value="all" ${state.menuFilters.grade === 'all' ? 'selected' : ''}>すべての学年</option><option value="12" ${state.menuFilters.grade === '12' ? 'selected' : ''}>1・2年</option>${[3, 4, 5, 6].map(grade => `<option value="${grade}" ${state.menuFilters.grade === String(grade) ? 'selected' : ''}>${grade}年</option>`).join('')}</select>
       <select id="filter-subject" aria-label="教科でしぼる"><option value="all">すべての教科</option>${Object.values(SUBJECTS).map(s => `<option value="${s.id}" ${state.menuFilters.subject === s.id ? 'selected' : ''}>${s.label}（${DATA_COUNTS[s.id]}）</option>`).join('')}</select>
       <select id="filter-type" aria-label="型でしぼる"><option value="all">すべての型</option>${Object.values(MENU_TYPES).map(t => `<option value="${t.id}" ${state.menuFilters.type === t.id ? 'selected' : ''}>${t.label}</option>`).join('')}</select>
       <select id="filter-minutes" aria-label="時間でしぼる"><option value="all">すべての時間</option><option value="10" ${state.menuFilters.minutes === '10' ? 'selected' : ''}>10分くらい</option><option value="20" ${state.menuFilters.minutes === '20' ? 'selected' : ''}>20分くらい</option><option value="30" ${state.menuFilters.minutes === '30' ? 'selected' : ''}>じっくり</option></select>
@@ -409,7 +411,6 @@ function renderResources() {
 }
 
 function render() {
-  gradeSelect.value = String(state.grade);
   const views = { home: renderHome, decide: renderDecide, candidates: renderCandidates, menus: renderMenus, coach: renderCoach, guide: renderGuide, tests: renderTests, records: renderRecords, resources: renderResources };
   app.innerHTML = (views[state.route] || renderHome)();
   bindEvents();
@@ -445,6 +446,7 @@ function bindEvents() {
   app.querySelector('#rechoose')?.addEventListener('click', chooseCandidates);
   app.querySelector('#finish-menu')?.addEventListener('click', () => openFinishModal(state.activeMenu));
   app.querySelector('#menu-search')?.addEventListener('input', event => { state.menuFilters.query = event.target.value; rerenderMenuResults(); });
+  app.querySelector('#filter-grade')?.addEventListener('change', event => { state.menuFilters.grade = event.target.value; render(); });
   app.querySelector('#filter-subject')?.addEventListener('change', event => { state.menuFilters.subject = event.target.value; render(); });
   app.querySelector('#filter-type')?.addEventListener('change', event => { state.menuFilters.type = event.target.value; render(); });
   app.querySelector('#filter-minutes')?.addEventListener('change', event => { state.menuFilters.minutes = event.target.value; render(); });
@@ -484,7 +486,6 @@ function deleteTest(id) {
 }
 
 document.querySelectorAll('.site-header [data-route]').forEach(button => button.addEventListener('click', () => navigate(button.dataset.route)));
-gradeSelect.addEventListener('change', event => { state.grade = Number(event.target.value); saveSettings(); if (state.route !== 'home') render(); });
 
 window.addEventListener('keydown', event => {
   if (event.key === 'Escape') document.querySelector('.modal-backdrop')?.remove();
