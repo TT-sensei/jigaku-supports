@@ -290,7 +290,7 @@ function showReflection(modal, menu, hadMistake) {
   const target = modal.querySelector('#finish-next');
   target.innerHTML = `${hadMistake ? '<div class="reflection-box"><strong>間違いは大事なヒント。</strong><p>答えを写すだけでなく、どこで考えが変わったか確かめよう。</p></div>' : ''}
     <div class="reflection-box"><strong>最後に、ノートで振り返ろう</strong><ul>${menu.reflectionPrompts.map(prompt => `<li>${esc(prompt)}</li>`).join('')}</ul><p>全部書かなくても大丈夫。一つ選ぼう。</p></div>
-    <p><strong>間違いがあったとき、直すところまでできた？</strong></p>
+    ${hadMistake ? '<p><strong>間違いを直すところまでできた？</strong></p>' : ''}
     <button class="primary-button" type="button" id="save-completion">${hadMistake ? '直して、今日はおわり' : '今日はおわり'}</button>`;
   target.querySelector('#save-completion').addEventListener('click', () => {
     const records = getRecords();
