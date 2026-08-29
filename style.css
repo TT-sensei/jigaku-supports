@@ -78,6 +78,7 @@ a { color: var(--green-dark); }
 }
 .entrance-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
 .entrance-card.primary { grid-row: span 2; min-height: 326px; padding: 28px; color: white; background: linear-gradient(145deg, var(--green), var(--green-dark)); border: 0; }
+.entrance-card:last-child { grid-column: 2 / 4; }
 .entrance-card .icon { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 15px; font-size: 1.65rem; background: var(--green-soft); margin-bottom: 18px; }
 .entrance-card.primary .icon { width: 64px; height: 64px; font-size: 2.2rem; color: var(--green-dark); background: #fff8; }
 .entrance-card h2 { margin: 0 0 5px; font-size: 1.18rem; }
@@ -229,6 +230,7 @@ footer { min-height: 64px; display: flex; justify-content: space-between; gap: 1
   .main-grid { grid-template-columns: 1fr 1fr; gap: 9px; }
   .entrance-card, .entrance-card.primary { grid-row: auto; min-height: 145px; padding: 15px; }
   .entrance-card.primary { grid-column: 1 / -1; min-height: 170px; }
+  .entrance-card:last-child { grid-column: 1 / -1; }
   .entrance-card .icon { width: 40px; height: 40px; margin-bottom: 10px; font-size: 1.25rem; }
   .entrance-card.primary .icon { width: 48px; height: 48px; font-size: 1.5rem; }
   .entrance-card h2, .entrance-card.primary h2 { font-size: 1.05rem; }
