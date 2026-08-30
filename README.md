@@ -38,6 +38,14 @@
 
 各メニューは `id / subject / title / type / grades / difficulty / minutes / purposes / whenToUse / materials / goalExample / instruction / customSteps / reflectionPrompts / testRecommended / relatedResources` を持ちます。
 
+## License
+
+学校教育・家庭学習での非営利利用を歓迎します。コードの利用・改変・再配布はPolyForm Noncommercial License 1.0.0の条件に従ってください。商用利用は許可していません。
+
+このアプリに含まれる画像、キャラクター、教材データ、第三者素材には、それぞれの権利者または個別のライセンス条件が適用される場合があります。第三者素材を再配布・販売しないでください。
+
+詳細は `LICENSE` を確認してください。
+
 ## 技術
 
 HTML / CSS / Vanilla JavaScriptのみ。ビルド不要でGitHub Pagesから動作します。保存には `edu-components` の `StorageManager` をローカル同梱して使い、`edu:jigaku-coach-v1:*` のnamespaceに集約しています。
