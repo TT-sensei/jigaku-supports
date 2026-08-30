@@ -16,6 +16,17 @@
       <span><strong>自学サポート</strong><small>ノートで学ぶ力を育てよう</small></span>
     </button>
     <nav class="header-actions" aria-label="共通メニュー">
+      <label class="grade-picker">
+        <span>学年</span>
+        <select id="header-grade" aria-label="学年を選ぶ">
+          <option value="1">1年</option>
+          <option value="2">2年</option>
+          <option value="3">3年</option>
+          <option value="4">4年</option>
+          <option value="5">5年</option>
+          <option value="6">6年</option>
+        </select>
+      </label>
       <button class="home-button" type="button" data-route="home">⌂ ホーム</button>
     </nav>
   </header>
@@ -37,6 +48,26 @@
   </template>
 
   <noscript><p class="noscript">このアプリを使うにはJavaScriptを有効にしてください。</p></noscript>
+  <script>
+    (() => {
+      const select = document.querySelector('#header-grade');
+      const key = 'edu:jigaku-coach-v1:settings';
+      if (!select) return;
+      try {
+        const saved = JSON.parse(localStorage.getItem(key) || '{}');
+        const grade = Number(saved.grade);
+        if (grade >= 1 && grade <= 6) select.value = String(grade);
+      } catch {}
+      select.addEventListener('change', () => {
+        const grade = Number(select.value);
+        try {
+          const saved = JSON.parse(localStorage.getItem(key) || '{}');
+          localStorage.setItem(key, JSON.stringify({ ...saved, grade }));
+        } catch {}
+        window.location.reload();
+      });
+    })();
+  </script>
   <script type="module" src="app.js?v=6"></script>
 </body>
 </html>
