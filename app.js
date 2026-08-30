@@ -3,6 +3,7 @@ import { MENUS, MENU_TYPES, SUBJECTS, DATA_COUNTS } from './data/menus.js';
 
 const storage = new StorageManager('jigaku-coach-v1');
 const app = document.querySelector('#app');
+const MENU_COUNT = MENUS.length;
 const IMG_ROOT = 'https://tt-sensei.github.io/navi-character-/assets/web/';
 const HERO_IMAGES = [
   'groups/learning/group-learning-pair-balance.webp',
@@ -58,6 +59,7 @@ let state = {
   coach: { purpose: null, time: null, subject: null },
   candidates: [],
   activeMenu: null,
+  coachBack: null,
   menuFilters: { query: '', grade: 'all', subject: 'all', type: 'all', minutes: 'all' },
   resourceGroup: 'video'
 };
@@ -97,6 +99,7 @@ function navigate(route, data = {}) {
   if (route !== 'coach') {
     clearInterval(timerState.interval);
     timerState = freshTimerState();
+    state.coachBack = null;
   }
   state.route = route;
   Object.assign(state, data);
@@ -133,7 +136,7 @@ function renderHome() {
         <p>今の気持ちや時間に合うものを、三つ提案します。</p><span class="arrow" aria-hidden="true">→</span>
       </button>
       <button class="entrance-card" type="button" data-route="menus">
-        <span class="icon" aria-hidden="true">▤</span><h2>自学メニューから探す</h2><p>100のメニューから、自分で選びたいとき。</p><span class="arrow" aria-hidden="true">→</span>
+        <span class="icon" aria-hidden="true">▤</span><h2>自学メニューから探す</h2><p>${MENU_COUNT}のメニューから、自分で選びたいとき。</p><span class="arrow" aria-hidden="true">→</span>
       </button>
       <button class="entrance-card" type="button" data-route="tests">
         <span class="icon" aria-hidden="true">✓</span><h2>テストに向けて</h2><p>${testHint}</p><span class="arrow" aria-hidden="true">→</span>
@@ -232,7 +235,7 @@ function renderCandidates() {
     ${screenHead('この三つはどう？', 'どれも正解。やってみたいものを選ぼう。', 'decide')}
     <p class="recommendation-note">${recommendationMessage()}</p>
     <div class="card-grid">${state.candidates.map(menuCard).join('')}</div>
-    <div class="coach-nav"><button class="secondary-button" type="button" id="rechoose">ほかの三つを見る</button><button class="secondary-button" type="button" data-route="menus">100のメニューから探す</button></div>
+    <div class="coach-nav"><button class="secondary-button" type="button" id="rechoose">ほかの三つを見る</button><button class="secondary-button" type="button" data-route="menus">${MENU_COUNT}のメニューから探す</button></div>
   </section>`;
 }
 
@@ -250,7 +253,7 @@ function renderMenus() {
   const menus = getFilteredMenus();
   const gradeLead = state.menuFilters.grade === 'all' ? 'すべての学年' : state.menuFilters.grade === '12' ? '1・2年生' : `${state.menuFilters.grade}年生`;
   return `<section class="screen">
-    ${screenHead('自学メニューから探す', `${gradeLead}のメニューを表示しています。全体では100メニューです。`)}
+    ${screenHead('自学メニューから探す', `${gradeLead}のメニューを表示しています。全体では${MENU_COUNT}メニューです。`)}
     <div class="filters">
       <input id="menu-search" type="search" placeholder="ことばで探す" value="${esc(state.menuFilters.query)}" aria-label="メニューを検索">
       <select id="filter-grade" aria-label="学年でしぼる"><option value="all" ${state.menuFilters.grade === 'all' ? 'selected' : ''}>すべての学年</option><option value="12" ${state.menuFilters.grade === '12' ? 'selected' : ''}>1・2年</option>${[3, 4, 5, 6].map(grade => `<option value="${grade}" ${state.menuFilters.grade === String(grade) ? 'selected' : ''}>${grade}年</option>`).join('')}</select>
@@ -351,7 +354,7 @@ function renderCoach() {
   const steps = coachSteps(menu);
   const character = `${IMG_ROOT}characters/kai/fullbody/checking-note.webp`;
   return `<section class="screen">
-    ${screenHead(menu.title, `${subjectLabel(menu.subject)}・${typeLabel(menu.type)}・${menu.minutes}分くらい`, state.candidates.length ? 'candidates' : 'menus')}
+    ${screenHead(menu.title, `${subjectLabel(menu.subject)}・${typeLabel(menu.type)}・${menu.minutes}分くらい`, state.coachBack || (state.candidates.length ? 'candidates' : 'menus'))}
     <div class="coach-layout">
       <article class="coach-card">
         <header class="coach-card-head"><div class="chips"><span class="chip">${subjectLabel(menu.subject)}</span><span class="chip chip-grade">${gradeLabel(menu.grades)}</span><span class="chip type-${menu.type}">${typeLabel(menu.type)}</span><span class="chip">${difficultyStars(menu.difficulty)} ${menu.difficulty === 1 ? 'すぐできる' : menu.difficulty === 2 ? 'しっかり' : 'チャレンジ'}</span></div><h1>${esc(menu.title)}</h1><p>${esc(menu.instruction)}</p></header>
@@ -406,7 +409,7 @@ function showReflection(modal, menu, hadMistake, duration) {
     <button class="primary-button" type="button" id="save-completion">${hadMistake ? '直して、今日はおわり' : '今日はおわり'}</button>`;
   target.querySelector('#save-completion').addEventListener('click', () => {
     const records = getRecords();
-    records.push({ date: todayString(), subject: menu.subject, menuId: menu.id, minutes: duration, completed: true });
+    records.push({ date: todayString(), subject: menu.subject, menuId: menu.id, menuTitle: menu.title, minutes: duration, completed: true });
     storage.save('records', records.slice(-500));
     modal.remove();
     showDone(menu);
@@ -443,6 +446,29 @@ function testAdvice(test) {
   return 'まず、できるところと難しいところを見つけよう。';
 }
 
+function testStudyMenu(test) {
+  const range = test.range || 'テスト範囲';
+  return {
+    id: `test-study-${test.id}`,
+    subject: test.subject,
+    title: `${test.name}テストに向けて`,
+    type: 'B',
+    grades: [state.grade],
+    difficulty: 2,
+    minutes: 20,
+    materials: ['テスト範囲が分かるもの', '教科書やノート', '筆記用具'],
+    goalExample: `${range}から、もう一度確かめたいことを一つ決めよう。`,
+    instruction: `「${test.name}」のテストに向けて、できるところともう一度確かめたいところを整理しよう。`,
+    customSteps: [
+      `テスト範囲（${range}）を見て、できそう・もう一度・分からないに分ける。`,
+      '「もう一度」か「分からない」から一つ選び、教科書やノートで確かめる。',
+      '分かったこと、まだ確かめたいことを一つずつ書く。'
+    ],
+    reflectionPrompts: ['今日、できるようになったことは？', 'テストの前にもう一度確かめたいことは？'],
+    relatedResources: []
+  };
+}
+
 function renderTests() {
   const tests = getTests();
   return `<section class="screen">${screenHead('テスト予定', '予定を見て、何を確かめるかは自分で決めよう。')}
@@ -453,7 +479,7 @@ function renderTests() {
         <label class="field">日付<input name="date" type="date" min="${todayString()}" required></label>
         <label class="field">範囲（書かなくてもOK）<input name="range" maxlength="80" placeholder="例：教科書 42〜55ページ"></label>
       </div><div class="coach-nav"><span></span><button class="primary-button" type="submit">予定を登録する</button></div></form>
-      <div class="test-list">${tests.length ? tests.map(test => `<article class="test-item"><div class="date-badge">${formatDate(test.date)}</div><div><h3>${subjectLabel(test.subject)}　${esc(test.name)}</h3><p>${test.range ? `${esc(test.range)} ／ ` : ''}${esc(testAdvice(test))}</p></div><button class="danger-button" type="button" data-delete-test="${esc(test.id)}">削除</button></article>`).join('') : '<div class="empty-state">登録したテストはありません。予定が分かったら、自分で追加できます。</div>'}</div>
+      <div class="test-list">${tests.length ? tests.map(test => `<article class="test-item"><div class="date-badge">${formatDate(test.date)}</div><div><h3>${subjectLabel(test.subject)}　${esc(test.name)}</h3><p>${test.range ? `${esc(test.range)} ／ ` : ''}${esc(testAdvice(test))}</p></div><div class="test-actions"><button class="primary-button" type="button" data-test-study="${esc(test.id)}">テストに向けて勉強</button><button class="danger-button" type="button" data-delete-test="${esc(test.id)}">削除</button></div></article>`).join('') : '<div class="empty-state">登録したテストはありません。予定が分かったら、自分で追加できます。</div>'}</div>
     </div>
   </section>`;
 }
@@ -482,7 +508,7 @@ function renderRecords() {
   return `<section class="screen">${screenHead('学習記録', '今月、どんな方法で学んだかを見てみよう。')}
     <div class="record-summary"><div class="month-card"><span>${now.getMonth() + 1}月の学び</span><strong>${uniqueDays ? 'いろいろな方法' : 'これから'}</strong><span>${uniqueDays ? `${uniqueDays}日、ノートで学びました。` : '最初の自学を決めてみよう。'}</span></div><div class="subject-bars">${Object.values(SUBJECTS).map(subject => `<div class="subject-row"><span>${subject.label}</span><div class="bar"><i style="width:${counts[subject.id] / max * 100}%"></i></div><span>${counts[subject.id]}</span></div>`).join('')}</div></div>
     <div class="panel"><h2>${now.getMonth() + 1}月のカレンダー</h2><div class="calendar">${calendarMarkup(records)}</div></div>
-    <div class="record-list">${recent.length ? recent.map(record => { const menu = MENUS.find(m => m.id === record.menuId); return `<article class="record-item"><div class="date-badge">${formatDate(record.date)}</div><div><h3>${menu ? esc(menu.title) : '自学メニュー'}</h3><p>${subjectLabel(record.subject)}・${record.minutes}分くらい</p></div></article>`; }).join('') : '<div class="empty-state">まだ記録はありません。自学が終わったら「できた！」から記録できます。</div>'}</div>
+    <div class="record-list">${recent.length ? recent.map(record => { const menu = MENUS.find(m => m.id === record.menuId); return `<article class="record-item"><div class="date-badge">${formatDate(record.date)}</div><div><h3>${menu ? esc(menu.title) : esc(record.menuTitle || '自学メニュー')}</h3><p>${subjectLabel(record.subject)}・${record.minutes}分くらい</p></div></article>`; }).join('') : '<div class="empty-state">まだ記録はありません。自学が終わったら「できた！」から記録できます。</div>'}</div>
   </section>`;
 }
 
@@ -510,6 +536,7 @@ function bindEvents() {
     clearInterval(timerState.interval);
     timerState = freshTimerState();
     state.activeMenu = MENUS.find(menu => menu.id === button.dataset.menuId);
+    state.coachBack = null;
     navigate('coach');
   }));
   app.querySelectorAll('[data-coach-purpose]').forEach(button => button.addEventListener('click', () => {
@@ -544,6 +571,7 @@ function bindEvents() {
   app.querySelector('#filter-type')?.addEventListener('change', event => { state.menuFilters.type = event.target.value; render(); });
   app.querySelector('#filter-minutes')?.addEventListener('change', event => { state.menuFilters.minutes = event.target.value; render(); });
   app.querySelector('#test-form')?.addEventListener('submit', saveTest);
+  app.querySelectorAll('[data-test-study]').forEach(button => button.addEventListener('click', () => startTestStudy(button.dataset.testStudy)));
   app.querySelectorAll('[data-delete-test]').forEach(button => button.addEventListener('click', () => deleteTest(button.dataset.deleteTest)));
   app.querySelectorAll('[data-resource-group]').forEach(button => button.addEventListener('click', () => { state.resourceGroup = button.dataset.resourceGroup; render(); }));
 }
@@ -560,7 +588,7 @@ function rerenderMenuResults() {
   if (count) count.textContent = `${menus.length}件見つかりました`;
   if (grid) {
     grid.innerHTML = menus.length ? menus.map(menuCard).join('') : '<div class="empty-state">条件に合うメニューがありません。しぼりこみを少し戻してみよう。</div>';
-    grid.querySelectorAll('[data-menu-id]').forEach(button => button.addEventListener('click', () => { state.activeMenu = MENUS.find(menu => menu.id === button.dataset.menuId); navigate('coach'); }));
+    grid.querySelectorAll('[data-menu-id]').forEach(button => button.addEventListener('click', () => { state.activeMenu = MENUS.find(menu => menu.id === button.dataset.menuId); state.coachBack = null; navigate('coach'); }));
   }
 }
 
@@ -576,6 +604,14 @@ function saveTest(event) {
 function deleteTest(id) {
   storage.save('tests', getTests().filter(test => test.id !== id));
   render();
+}
+
+function startTestStudy(id) {
+  const test = getTests().find(item => item.id === id);
+  if (!test) return;
+  clearInterval(timerState.interval);
+  timerState = freshTimerState();
+  navigate('coach', { activeMenu: testStudyMenu(test), candidates: [], coachBack: 'tests' });
 }
 
 document.querySelectorAll('.site-header [data-route]').forEach(button => button.addEventListener('click', () => navigate(button.dataset.route)));
