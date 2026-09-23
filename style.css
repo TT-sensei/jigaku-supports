@@ -277,3 +277,55 @@ footer { min-height: 64px; display: flex; justify-content: space-between; gap: 1
   .test-item .test-actions button { flex: 1; }
   footer { display: grid; }
 }
+
+
+.notebook-goal-panel {
+  margin: 0 0 18px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--paper);
+}
+.notebook-goal-panel h2 { margin: 4px 0 4px; font-size: 1.12rem; }
+.notebook-goal-panel p { margin: 0; color: var(--muted); font-size: .9rem; }
+.notebook-goal-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 14px;
+}
+.notebook-goal-button {
+  min-height: 76px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+.notebook-goal-button strong,
+.notebook-goal-button small { display: block; }
+.notebook-goal-button small { margin-top: 4px; color: var(--muted); line-height: 1.4; }
+.notebook-goal-button.selected {
+  border-color: var(--green);
+  background: var(--green-soft);
+  box-shadow: inset 0 0 0 2px var(--green);
+}
+.selected-learning-goal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 14px;
+  padding: 11px 14px;
+  border-radius: 14px;
+  background: var(--green-soft);
+}
+.selected-learning-goal span { color: var(--muted); font-size: .82rem; }
+.selected-learning-goal strong { color: var(--green-dark); }
+
+@media (max-width: 700px) {
+  .notebook-goal-grid { grid-template-columns: 1fr; }
+  .notebook-goal-button { min-height: 62px; }
+  .selected-learning-goal { align-items: flex-start; flex-direction: column; gap: 3px; }
+}
