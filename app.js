@@ -56,7 +56,7 @@ const RESOURCES = [
 let state = {
   route: 'home',
   grade: Number(storage.load('settings', {}).grade) || 3,
-  coach: { purpose: null, time: null, subject: null },
+  coach: { purpose: null, time: null, subject: null, notebookGoal: 'self' },
   candidates: [],
   activeMenu: null,
   coachBack: null,
@@ -231,14 +231,24 @@ function menuCard(menu) {
 }
 
 function renderCandidates() {
+  const notebookGoals = [
+    { id: 'self', label: '自分が分かればOK', desc: 'まずは自分の理解を大切にする' },
+    { id: 'review', label: 'あとで見返せるように', desc: '大事なことが残るノートにする' },
+    { id: 'teach', label: '人に教えられるように', desc: '自分の言葉で伝わるノートにする' }
+  ];
   return `<section class="screen">
     ${screenHead('この三つはどう？', 'どれも正解。やってみたいものを選ぼう。', 'decide')}
     <p class="recommendation-note">${recommendationMessage()}</p>
+    <div class="notebook-goal-panel">
+      <div><span class="step-kicker">ノートの目標</span><h2>今日は、どこまで伝わるノートにする？</h2><p>きれいさの評価ではなく、「どう学ぶか」を自分で決めよう。</p></div>
+      <div class="notebook-goal-grid">
+        ${notebookGoals.map(goal => `<button class="notebook-goal-button ${state.coach.notebookGoal === goal.id ? 'selected' : ''}" type="button" data-notebook-goal="${goal.id}"><strong>${goal.label}</strong><small>${goal.desc}</small></button>`).join('')}
+      </div>
+    </div>
     <div class="card-grid">${state.candidates.map(menuCard).join('')}</div>
     <div class="coach-nav"><button class="secondary-button" type="button" id="rechoose">ほかの三つを見る</button><button class="secondary-button" type="button" data-route="menus">${MENU_COUNT}のメニューから探す</button></div>
   </section>`;
 }
-
 function getFilteredMenus() {
   const f = state.menuFilters;
   return MENUS
@@ -353,11 +363,14 @@ function renderCoach() {
   const menu = state.activeMenu || MENUS[0];
   const steps = coachSteps(menu);
   const character = `${IMG_ROOT}characters/kai/fullbody/checking-note.webp`;
+  const notebookGoalLabels = { self: '自分が分かればOK', review: 'あとで見返せるように', teach: '人に教えられるように' };
+  const notebookGoal = notebookGoalLabels[state.coach.notebookGoal] || notebookGoalLabels.self;
   return `<section class="screen">
     ${screenHead(menu.title, `${subjectLabel(menu.subject)}・${typeLabel(menu.type)}・${menu.minutes}分くらい`, state.coachBack || (state.candidates.length ? 'candidates' : 'menus'))}
     <div class="coach-layout">
       <article class="coach-card">
         <header class="coach-card-head"><div class="chips"><span class="chip">${subjectLabel(menu.subject)}</span><span class="chip chip-grade">${gradeLabel(menu.grades)}</span><span class="chip type-${menu.type}">${typeLabel(menu.type)}</span><span class="chip">${difficultyStars(menu.difficulty)} ${menu.difficulty === 1 ? 'すぐできる' : menu.difficulty === 2 ? 'しっかり' : 'チャレンジ'}</span></div><h1>${esc(menu.title)}</h1><p>${esc(menu.instruction)}</p></header>
+        <div class="selected-learning-goal"><span>今日のノートの目標</span><strong>${esc(notebookGoal)}</strong></div>
         <ol class="step-list">${steps.map(step => `<li class="step-item"><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p>${step.goal ? `<div class="goal-box"><strong>めあての例</strong><br>「${esc(step.goal)}」</div>` : ''}</li>`).join('')}</ol>
         <div class="study-timer" aria-label="自学タイマー">
           <div class="timer-heading"><span class="timer-icon" aria-hidden="true">⏱</span><div><h2>自学タイマー</h2><p>何分取り組むか、自分で決めよう。</p></div></div>
@@ -559,6 +572,10 @@ function bindEvents() {
   app.querySelectorAll('[data-coach-next]').forEach(button => button.addEventListener('click', () => showCoachStep(Number(button.dataset.coachNext))));
   app.querySelectorAll('[data-coach-back]').forEach(button => button.addEventListener('click', () => showCoachStep(Number(button.dataset.coachBack))));
   app.querySelector('#show-candidates')?.addEventListener('click', chooseCandidates);
+  app.querySelectorAll('[data-notebook-goal]').forEach(button => button.addEventListener('click', () => {
+    state.coach.notebookGoal = button.dataset.notebookGoal;
+    app.querySelectorAll('[data-notebook-goal]').forEach(item => item.classList.toggle('selected', item === button));
+  }));
   app.querySelector('#rechoose')?.addEventListener('click', chooseCandidates);
   app.querySelector('#finish-menu')?.addEventListener('click', () => openFinishModal(state.activeMenu));
   app.querySelector('#timer-start')?.addEventListener('click', startTimer);
