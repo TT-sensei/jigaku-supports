@@ -47,11 +47,50 @@ const RESOURCES = [
   { group: 'practice', title: 'eboard', desc: '単元ごとの短い映像と確認問題で、分からないところを戻って確かめられます。', url: 'https://www.eboard.jp/list/', subject: '国語・算数・理科・社会' },
   { group: 'print', title: '東京ベーシック・ドリル（プリント教材）', desc: '教科・学年・学習内容を選び、問題と答えのPDFを印刷できます。', url: 'https://www.kyoiku.metro.tokyo.lg.jp/school/study_material/improvement/tokyo_basic_drill/about', subject: '国語・算数・社会・理科' },
   { group: 'print', title: 'やまぐち学習支援プログラム', desc: '学習内容を選んで、印刷できる教材を探せます。', url: 'https://gimukyo.ysn21.jp/gakushi/index.php#print', subject: 'いろいろ' },
-  { group: 'app', title: 'Learning Portal', desc: '学年や教科から、自分に合う学習アプリを選べます。', url: 'https://tt-sensei.github.io/learning-portal/', subject: 'いろいろ' },
-  { group: 'app', title: '漢字マスター', desc: '漢字を練習したいときに。終わったら、間違えた一字をノートに残そう。', url: 'https://tt-sensei.github.io/kanjiapp/', subject: '国語' },
-  { group: 'app', title: '単位研究所', desc: '長さ・かさ・重さなどの単位を確かめたいときに。気付いた関係を一つノートへ。', url: 'https://tt-sensei.github.io/tanilabo/', subject: '算数' },
-  { group: 'app', title: '都道府県マスター', desc: '都道府県の位置や特色を復習したいときに。苦手な県を一つノートへ。', url: 'https://tt-sensei.github.io/todoufuken/', subject: '社会' },
-  { group: 'app', title: 'ことばの森・立式の旅', desc: '文章題の式を立てる練習に。使った考え方を一つノートへ。', url: 'https://tt-sensei.github.io/bunsyo-dai/', subject: '算数' }
+  { group: 'app', title: 'Learning Portal', desc: '学年・教科から、ほかの学習アプリも探せます。', url: 'https://tt-sensei.github.io/learning-portal/', subject: 'いろいろ' },
+  { group: 'app', title: '漢字マスター書取り練習', desc: '今の学年の漢字を練習。終わったら、まちがえやすい字を一つノートに残そう。', url: 'https://tt-sensei.github.io/kanjiapp/', subject: '国語' },
+  { group: 'app', title: '漢字読みファンタジー', desc: '漢字の読みをくり返し練習。読みを間違えた言葉をノートで確かめよう。', url: 'https://tt-sensei.github.io/kanjirensyu/', subject: '国語' },
+  { group: 'app', title: 'かなどっち？', desc: 'ひらがな・カタカナや小さい文字の使い方を確かめよう。', url: 'https://tt-sensei.github.io/kanadocchi-/', subject: '国語' },
+  { group: 'app', title: 'ことラボ', desc: 'ことば・文・文章を段階的に練習。自分で作った文をノートに書こう。', url: 'https://tt-sensei.github.io/kotorabo/', subject: '国語' },
+  { group: 'app', title: 'ことばのつらなり', desc: '主語・述語などに注目して、文の組み立てを考えよう。', url: 'https://tt-sensei.github.io/bunnotsukuri/', subject: '国語' },
+  { group: 'app', title: '熟語の組み立て', desc: '熟語の成り立ちを分類。まちがえた組み立てを一つノートに整理しよう。', url: 'https://tt-sensei.github.io/jyukugo-sort/', subject: '国語' },
+  { group: 'app', title: 'ことのは ― 敬語のたしなみ ―', desc: '場面に合う敬語を選ぶ練習。なぜその表現を選んだか言葉にしよう。', url: 'https://tt-sensei.github.io/keigo-kotonoha/', subject: '国語' },
+  { group: 'app', title: 'じしょマスター', desc: '辞書を引く練習。調べた言葉の意味を一つノートに残そう。', url: 'https://tt-sensei.github.io/kokugojiten/', subject: '国語' },
+  { group: 'app', title: 'ことばのしらべ', desc: 'ことわざ・慣用句・四字熟語を調べて、意味や使い方をノートにまとめよう。', url: 'https://tt-sensei.github.io/kotobanosirabe/', subject: '国語' },
+  { group: 'app', title: 'ローマ字ファンタジー', desc: 'ローマ字を読む・入力する練習。まちがえたつづりを表で確かめよう。', url: 'https://tt-sensei.github.io/typing/', subject: '国語' },
+  { group: 'app', title: '音読スナップ', desc: '音読するページを登録して練習。読み方を工夫した一文をノートに残そう。', url: 'https://tt-sensei.github.io/ondoku/', subject: '国語' },
+  { group: 'app', title: '読書レコード', desc: '読んだ本を記録。心に残ったところをノートにも一つ残そう。', url: 'https://tt-sensei.github.io/dokusho-record/', subject: '国語' },
+  { group: 'app', title: 'すうじのぼうけん', desc: '数のしくみ・たし算・ひき算を練習。やり方をノートに絵で表そう。', url: 'https://tt-sensei.github.io/1nensasuuworld/', subject: '算数' },
+  { group: 'app', title: 'たしひきファンタジーバトル', desc: 'たし算・ひき算を反復練習。まちがえた式をノートで解き直そう。', url: 'https://tt-sensei.github.io/tashi-hiki/', subject: '算数' },
+  { group: 'app', title: '九九ファンタジーバトル', desc: '九九を練習。苦手な段を選んでから、答えをノートで確かめよう。', url: 'https://tt-sensei.github.io/kuku-battle-/', subject: '算数' },
+  { group: 'app', title: '掛け算のひっ算', desc: 'かけ算の筆算を位に注意して練習。途中の計算をノートで確かめよう。', url: 'https://tt-sensei.github.io/magical-kakezan/', subject: '算数' },
+  { group: 'app', title: '割り算ファンタジーバトル', desc: 'わり算を練習。あまりや答えの確かめ方をノートに残そう。', url: 'https://tt-sensei.github.io/warizanland/', subject: '算数' },
+  { group: 'app', title: '割り算筆算バトル', desc: 'わり算の筆算の順番を練習。位ごとの動きをノートに書こう。', url: 'https://tt-sensei.github.io/warizanbattle/', subject: '算数' },
+  { group: 'app', title: 'ことばの森・立式の旅', desc: '文章題から式を立てる練習。式にした理由をノートに書こう。', url: 'https://tt-sensei.github.io/bunsyo-dai/', subject: '算数' },
+  { group: 'app', title: '数のしくみ', desc: '数の見方や仕組みを考えよう。気付いたことを一つノートに残そう。', url: 'https://tt-sensei.github.io/kazunosikumi/', subject: '算数' },
+  { group: 'app', title: 'ものさしハンター', desc: '長さの見当をつける練習。実際の長さもものさしで確かめよう。', url: 'https://tt-sensei.github.io/nagasa-hunter/', subject: '算数' },
+  { group: 'app', title: 'おもさを はかろう', desc: 'はかりの目盛りを読む練習。重さの単位もセットでノートに残そう。', url: 'https://tt-sensei.github.io/omosa-hakari/', subject: '算数' },
+  { group: 'app', title: '単位研究所', desc: '長さ・かさ・重さ・時間・面積・体積の単位を確かめよう。', url: 'https://tt-sensei.github.io/tanilabo/', subject: '算数' },
+  { group: 'app', title: '角度ハンター', desc: '角度を見つけて測る練習。身近な角度をノートに図で表そう。', url: 'https://tt-sensei.github.io/kakudo-hunter/', subject: '算数' },
+  { group: 'app', title: '倍・約数メイズ', desc: '倍数・約数の見方を練習。見つけた規則をノートにまとめよう。', url: 'https://tt-sensei.github.io/bai-yaku-maze/', subject: '算数' },
+  { group: 'app', title: 'コアバトル', desc: '数の組み合わせで目標の数を作ろう。考えた式をノートに残そう。', url: 'https://tt-sensei.github.io/core-numberbattle/', subject: '算数' },
+  { group: 'app', title: '円の面積', desc: '円の面積の求め方を確かめよう。公式の意味をノートに図で表そう。', url: 'https://tt-sensei.github.io/enmenseki/', subject: '算数' },
+  { group: 'app', title: 'めんせき・たいせきラボ', desc: '面積・体積の考え方を練習。図と式をノートに残そう。', url: 'https://tt-sensei.github.io/taiseki/', subject: '算数' },
+  { group: 'app', title: '比のパーク', desc: '比とその利用を練習。似た場面を一つノートで作ってみよう。', url: 'https://tt-sensei.github.io/ratiopark/', subject: '算数' },
+  { group: 'app', title: '理科ラボ 3年', desc: '3年生の生き物・光・音・電気などを確かめよう。', url: 'https://tt-sensei.github.io/rika3nen/', subject: '理科' },
+  { group: 'app', title: '理科ラボ 4年', desc: '4年生の季節・天気・空気や水などを確かめよう。', url: 'https://tt-sensei.github.io/rika4nen/', subject: '理科' },
+  { group: 'app', title: '理科ラボ 5年', desc: '5年生の植物・天気・水の変化などを確かめよう。', url: 'https://tt-sensei.github.io/rika5nen/', subject: '理科' },
+  { group: 'app', title: '理科ラボ 6年', desc: '6年生の体のはたらき・月と太陽・電気などを確かめよう。', url: 'https://tt-sensei.github.io/rika6nen/', subject: '理科' },
+  { group: 'app', title: '地図探検', desc: '地図記号や地域の場所・方位を確かめよう。見つけたことをノートに図で表そう。', url: 'https://tt-sensei.github.io/chizu-tanken/', subject: '社会' },
+  { group: 'app', title: '都道府県マスター', desc: '都道府県の位置や県庁所在地を復習し、苦手な県を一つノートに残そう。', url: 'https://tt-sensei.github.io/todoufuken/', subject: '社会' },
+  { group: 'app', title: 'れきし探偵団', desc: '歴史人物や時代を確かめ、人物や出来事のつながりをノートに整理しよう。', url: 'https://tt-sensei.github.io/rekisijinbutu/', subject: '社会' },
+  { group: 'app', title: '室町しらべ', desc: '室町時代の文化を調べ、今に残るものをノートにまとめよう。', url: 'https://tt-sensei.github.io/muromachi-shirabe/', subject: '社会' },
+  { group: 'app', title: '公民くん', desc: '日本国憲法や政治のしくみを確かめ、言葉の意味をノートにまとめよう。', url: 'https://tt-sensei.github.io/kouminkun/', subject: '社会' },
+  { group: 'app', title: '社会科ゲームブック', desc: '米づくりや自動車づくりを体験的に学び、気付いた工夫をノートに書こう。', url: 'https://tt-sensei.github.io/shakai-gamebook/', subject: '社会' },
+  { group: 'app', title: 'WORLD QUEST', desc: '世界の国の文化・食・自然などを知り、気になったことを一つノートに残そう。', url: 'https://tt-sensei.github.io/world-quest/', subject: '社会' },
+  { group: 'app', title: '英検5級チャレンジ', desc: '英語の語句・会話・文を練習。まちがえた表現を一つノートで確かめよう。', url: 'https://tt-sensei.github.io/eiken5/', subject: '英語' },
+  { group: 'app', title: 'ピクセルアートメーカー', desc: 'マス目や色、形を工夫して作品を作ろう。', url: 'https://tt-sensei.github.io/pixel-art-maker/', subject: '図工' },
+  { group: 'app', title: 'つないでアート', desc: '点と点をつないで形や模様を作ろう。', url: 'https://tt-sensei.github.io/tsunaide-art/', subject: '図工' }
 ];
 
 let state = {
@@ -61,8 +100,9 @@ let state = {
   candidates: [],
   activeMenu: null,
   coachBack: null,
-  menuFilters: { query: '', grade: 'all', subject: 'all', type: 'all', minutes: 'all' },
-  resourceGroup: 'video'
+  menuFilters: { query: '', grade: String(Number(storage.load('settings', {}).grade) || 3), subject: 'all', type: 'all', minutes: 'all' },
+  resourceGroup: 'video',
+  resourceSubject: 'all'
 };
 let lastHeroImage = '';
 let timerState = { totalSeconds: 30 * 60, remainingSeconds: 30 * 60, running: false, finished: false, startedAt: null, interval: null };
@@ -146,6 +186,11 @@ function renderBadgeCollection() {
   const data = learningJourney();
   return '<div class="panel badge-panel"><div class="section-heading"><div><h2>自学バッジ図鑑</h2><p>いろいろな学びの足あとが、バッジになって残るよ。</p></div><span class="badge-count">' + data.badges.filter(b => b.earned).length + ' / ' + data.badges.length + '</span></div><div class="badge-grid">' + data.badges.map(b => '<article class="badge-card ' + (b.earned ? 'earned' : 'locked') + '"><span class="badge-art"><img src="' + EDU_ASSET_ROOT + 'badges/common/' + b.asset + '/badge.webp" alt="" loading="lazy"></span><div><h3>' + b.title + '</h3><p>' + b.desc + '</p><span class="badge-status">' + (b.earned ? '獲得したよ' : 'これからのお楽しみ') + '</span></div></article>').join('') + '</div></div>';
 }
+function subjectsForGrade(grade) {
+  const available = new Set(MENUS.filter(menu => menu.grades.includes(Number(grade))).map(menu => menu.subject));
+  return Object.values(SUBJECTS).filter(subject => available.has(subject.id));
+}
+
 function renderHome() {
   const upcoming = getTests().filter(test => daysFromToday(test.date) >= 0).sort((a, b) => a.date.localeCompare(b.date))[0];
   const testHint = upcoming ? `${subjectLabel(upcoming.subject)}「${esc(upcoming.name)}」の予定があります。` : 'テストの予定を自分で登録できます。';
@@ -186,6 +231,7 @@ function renderHome() {
 }
 
 function renderDecide() {
+  const availableSubjects = subjectsForGrade(state.grade);
   return `<section class="screen">
     ${screenHead('今日の自学を決める', '答えは一つではありません。最後は自分で選ぼう。')}
     <div class="panel">
@@ -203,7 +249,7 @@ function renderDecide() {
         <span class="step-kicker">STEP 3 / 3</span><h2>教科は決まっている？</h2>
         <div class="choice-grid">
           <button class="choice-button ${state.coach.subject === 'all' ? 'selected' : ''}" type="button" data-coach-subject="all">どの教科でも</button>
-          ${Object.values(SUBJECTS).map(subject => `<button class="choice-button subject-${subject.id} ${state.coach.subject === subject.id ? 'selected' : ''}" type="button" data-coach-subject="${subject.id}">${subject.label}</button>`).join('')}
+          ${availableSubjects.map(subject => `<button class="choice-button subject-${subject.id} ${state.coach.subject === subject.id ? 'selected' : ''}" type="button" data-coach-subject="${subject.id}">${subject.label}</button>`).join('')}
         </div>
         <div class="coach-nav"><button class="secondary-button" type="button" data-coach-back="2">← もどる</button><button class="primary-button" type="button" id="show-candidates" ${state.coach.subject ? '' : 'disabled'}>三つ見てみる</button></div>
       </div>
@@ -284,7 +330,7 @@ function renderCandidates() {
 function getFilteredMenus() {
   const f = state.menuFilters;
   return MENUS
-    .filter(menu => f.grade === 'all' || (f.grade === '12' ? menu.grades.some(grade => grade === 1 || grade === 2) : menu.grades.includes(Number(f.grade))))
+    .filter(menu => f.grade === 'all' || menu.grades.includes(Number(f.grade)))
     .filter(menu => f.subject === 'all' || menu.subject === f.subject)
     .filter(menu => f.type === 'all' || menu.type === f.type)
     .filter(menu => f.minutes === 'all' || (f.minutes === '10' ? menu.minutes <= 12 : f.minutes === '20' ? menu.minutes >= 13 && menu.minutes <= 22 : menu.minutes >= 23))
@@ -293,12 +339,12 @@ function getFilteredMenus() {
 
 function renderMenus() {
   const menus = getFilteredMenus();
-  const gradeLead = state.menuFilters.grade === 'all' ? 'すべての学年' : state.menuFilters.grade === '12' ? '1・2年生' : `${state.menuFilters.grade}年生`;
+  const gradeLead = state.menuFilters.grade === 'all' ? 'すべての学年' : `${state.menuFilters.grade}年生`;
   return `<section class="screen">
     ${screenHead('自学メニューから探す', `${gradeLead}のメニューを表示しています。全体では${MENU_COUNT}メニューです。`)}
     <div class="filters">
       <input id="menu-search" type="search" placeholder="ことばで探す" value="${esc(state.menuFilters.query)}" aria-label="メニューを検索">
-      <select id="filter-grade" aria-label="学年でしぼる"><option value="all" ${state.menuFilters.grade === 'all' ? 'selected' : ''}>すべての学年</option><option value="12" ${state.menuFilters.grade === '12' ? 'selected' : ''}>1・2年</option>${[3, 4, 5, 6].map(grade => `<option value="${grade}" ${state.menuFilters.grade === String(grade) ? 'selected' : ''}>${grade}年</option>`).join('')}</select>
+      <select id="filter-grade" aria-label="学年でしぼる"><option value="all" ${state.menuFilters.grade === 'all' ? 'selected' : ''}>すべての学年</option>${[1, 2, 3, 4, 5, 6].map(grade => `<option value="${grade}" ${state.menuFilters.grade === String(grade) ? 'selected' : ''}>${grade}年</option>`).join('')}</select>
       <select id="filter-subject" aria-label="教科でしぼる"><option value="all">すべての教科</option>${Object.values(SUBJECTS).map(s => `<option value="${s.id}" ${state.menuFilters.subject === s.id ? 'selected' : ''}>${s.label}（${DATA_COUNTS[s.id]}）</option>`).join('')}</select>
       <select id="filter-type" aria-label="型でしぼる"><option value="all">すべての型</option>${Object.values(MENU_TYPES).map(t => `<option value="${t.id}" ${state.menuFilters.type === t.id ? 'selected' : ''}>${t.label}</option>`).join('')}</select>
       <select id="filter-minutes" aria-label="時間でしぼる"><option value="all">すべての時間</option><option value="10" ${state.menuFilters.minutes === '10' ? 'selected' : ''}>10分くらい</option><option value="20" ${state.menuFilters.minutes === '20' ? 'selected' : ''}>20分くらい</option><option value="30" ${state.menuFilters.minutes === '30' ? 'selected' : ''}>じっくり</option></select>
@@ -519,7 +565,7 @@ function renderTests() {
   return `<section class="screen">${screenHead('テスト予定', '予定を見て、何を確かめるかは自分で決めよう。')}
     <div class="panel">
       <form id="test-form"><div class="form-grid">
-        <label class="field">教科<select name="subject" required>${Object.values(SUBJECTS).filter(s => s.id !== 'cross').map(s => `<option value="${s.id}">${s.label}</option>`).join('')}</select></label>
+        <label class="field">教科<select name="subject" required>${subjectsForGrade(state.grade).filter(s => s.id !== 'cross').map(s => `<option value="${s.id}">${s.label}</option>`).join('')}</select></label>
         <label class="field">テスト名<input name="name" maxlength="40" required placeholder="例：分数のたし算"></label>
         <label class="field">日付<input name="date" type="date" min="${todayString()}" required></label>
         <label class="field">範囲（書かなくてもOK）<input name="range" maxlength="80" placeholder="例：教科書 42〜55ページ"></label>
@@ -577,11 +623,28 @@ function renderRecords() {
 
 function renderResources() {
   const group = state.resourceGroup;
-  const resources = RESOURCES.filter(resource => resource.group === group);
-  return `<section class="screen">${screenHead('学習資料室', '困ったときに、説明・問題・プリント・アプリを選べます。')}
-    <div class="panel"><div class="resource-tabs" role="tablist">${Object.entries(RESOURCE_GROUPS).map(([id, item]) => `<button type="button" role="tab" aria-selected="${group === id}" class="${group === id ? 'active' : ''}" data-resource-group="${id}">${item.icon} ${item.label}</button>`).join('')}</div>
-      <div class="resource-grid">${resources.map(resource => `<article class="resource-card"><span class="chip">${resource.subject}</span><h3>${resource.title}</h3><p>${resource.desc}</p><a class="resource-link" href="${resource.url}" target="_blank" rel="noopener">ひらく <span aria-hidden="true">↗</span></a></article>`).join('')}</div>
-      <div class="resource-note">資料やアプリで確かめたら、分かったことや間違えたものを一つ、ノートに残してみよう。</div>
+  const subjectOptions = [
+    { id: 'all', label: 'すべて' },
+    { id: '国語', label: '国語' },
+    { id: '算数', label: '算数' },
+    { id: '理科', label: '理科' },
+    { id: '社会', label: '社会' },
+    { id: '英語', label: '英語' },
+    { id: 'その他', label: '図工・その他' }
+  ];
+  const resources = RESOURCES.filter(resource =>
+    resource.group === group &&
+    (group !== 'app' || state.resourceSubject === 'all' ||
+      resource.subject === state.resourceSubject ||
+      resource.subject === 'いろいろ' ||
+      (state.resourceSubject === 'その他' && resource.subject === '図工'))
+  );
+  return `<section class="screen">${screenHead('学習資料室', '説明・問題・プリント・アプリを使い、分かったことをノートに残そう。')}
+    <div class="panel"><div class="resource-tabs" role="tablist" aria-label="学習資料の種類">${Object.entries(RESOURCE_GROUPS).map(([id, item]) => `<button type="button" role="tab" aria-selected="${group === id}" class="${group === id ? 'active' : ''}" data-resource-group="${id}">${item.icon} ${item.label}</button>`).join('')}</div>
+      ${group === 'app' ? `<div class="resource-tabs app-resource-subjects" role="group" aria-label="学習アプリの教科">${subjectOptions.map(item => `<button type="button" class="${state.resourceSubject === item.id ? 'active' : ''}" aria-pressed="${state.resourceSubject === item.id}" data-resource-subject="${item.id}">${item.label}</button>`).join('')}</div>` : ''}
+      <p class="result-count">${resources.length}件</p>
+      <div class="resource-grid">${resources.length ? resources.map(resource => `<article class="resource-card"><span class="chip">${esc(resource.subject)}</span><h3>${esc(resource.title)}</h3><p>${esc(resource.desc)}</p><a class="resource-link" href="${resource.url}" target="_blank" rel="noopener">ひらく <span aria-hidden="true">↗</span></a></article>`).join('') : '<div class="empty-state">この教科のアプリはまだありません。別の教科を選んでみよう。</div>'}</div>
+      <div class="resource-note">アプリは練習や確かめに使おう。終わったら、分かったことや間違えたものを一つ、ノートに残してみよう。</div>
     </div>
   </section>`;
 }
@@ -641,6 +704,7 @@ function bindEvents() {
   app.querySelectorAll('[data-test-study]').forEach(button => button.addEventListener('click', () => startTestStudy(button.dataset.testStudy)));
   app.querySelectorAll('[data-delete-test]').forEach(button => button.addEventListener('click', () => deleteTest(button.dataset.deleteTest)));
   app.querySelectorAll('[data-resource-group]').forEach(button => button.addEventListener('click', () => { state.resourceGroup = button.dataset.resourceGroup; render(); }));
+  app.querySelectorAll('[data-resource-subject]').forEach(button => button.addEventListener('click', () => { state.resourceSubject = button.dataset.resourceSubject; render(); }));
   app.querySelectorAll('[data-calendar-date]').forEach(button => button.addEventListener('click', () => {
     const date = button.dataset.calendarDate;
     app.querySelectorAll('[data-calendar-date]').forEach(day => {
