@@ -371,3 +371,19 @@ footer { min-height: 64px; display: flex; justify-content: space-between; gap: 1
 .day-record-item h4{margin:0 0 3px;font-size:.93rem}
 .day-record-item p{margin:0;color:var(--muted);font-size:.8rem}
 @media(max-width:420px){.calendar{gap:3px}.calendar .calendar-day{min-height:50px;border-radius:8px}.calendar-stamp{width:21px;height:21px}.day-record-panel{padding:12px}}
+
+
+/* Student-friendly menu entry: small starter set first, full catalogue on demand. */
+
+.menu-mode-switch { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 16px; }
+.menu-mode-button { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-height: 68px; padding: 12px 15px; text-align: left; border: 1px solid var(--line); border-radius: 14px; background: white; color: var(--ink); cursor: pointer; }
+.menu-mode-button strong { font-size: .98rem; }
+.menu-mode-button span { color: var(--muted); font-size: .8rem; }
+.menu-mode-button.active { border-color: var(--green); background: var(--green-soft); box-shadow: inset 0 0 0 1px var(--green); }
+.menu-subject-group { margin: 18px 0 24px; }
+.menu-subject-heading { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; }
+.menu-subject-heading h2 { margin: 0; font-size: 1.15rem; }
+.menu-subject-heading span { color: var(--muted); font-size: .8rem; }
+.menu-subject-group .card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 820px) { .menu-subject-group .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .menu-mode-switch { grid-template-columns: 1fr 1fr; gap: 8px; } .menu-mode-button { padding: 10px; min-height: 72px; } .menu-mode-button strong { font-size: .9rem; } .menu-mode-button span { font-size: .74rem; } .menu-subject-group .card-grid { grid-template-columns: 1fr; } }

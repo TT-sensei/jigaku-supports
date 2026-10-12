@@ -1,5 +1,5 @@
 import { StorageManager } from './vendor/storage-manager.js';
-import { MENUS, MENU_TYPES, SUBJECTS, DATA_COUNTS } from './data/menus.js';
+import { MENUS, MENU_TYPES, SUBJECTS, DATA_COUNTS } from './data/menus.js?v=2';
 
 const storage = new StorageManager('jigaku-coach-v1');
 const app = document.querySelector('#app');
@@ -100,7 +100,7 @@ let state = {
   candidates: [],
   activeMenu: null,
   coachBack: null,
-  menuFilters: { query: '', grade: String(Number(storage.load('settings', {}).grade) || 3), subject: 'all', type: 'all', minutes: 'all' },
+  menuFilters: { query: '', grade: String(Number(storage.load('settings', {}).grade) || 3), subject: 'all', type: 'all', minutes: 'all', mode: 'starter' },
   resourceGroup: 'video',
   resourceSubject: 'all'
 };
@@ -337,20 +337,71 @@ function getFilteredMenus() {
     .filter(menu => !f.query || `${menu.title} ${menu.instruction} ${menu.purposes.join(' ')}`.toLowerCase().includes(f.query.toLowerCase()));
 }
 
+function getStarterMenus(menus) {
+  const bySubject = new Map();
+  for (const menu of menus) {
+    if (!bySubject.has(menu.subject)) bySubject.set(menu.subject, []);
+    bySubject.get(menu.subject).push(menu);
+  }
+  const chosen = [];
+  for (const [subject, items] of bySubject) {
+    const ranked = [...items].sort((a, b) =>
+      (a.difficulty * 10 + a.minutes / 10) - (b.difficulty * 10 + b.minutes / 10) ||
+      a.id.localeCompare(b.id)
+    );
+    const selected = [];
+    const usedTypes = new Set();
+    for (const menu of ranked) {
+      if (selected.length === 3) break;
+      if (!usedTypes.has(menu.type)) {
+        selected.push(menu);
+        usedTypes.add(menu.type);
+      }
+    }
+    for (const menu of ranked) {
+      if (selected.length === 3) break;
+      if (!selected.some(item => item.id === menu.id)) selected.push(menu);
+    }
+    chosen.push({ subject, menus: selected });
+  }
+  return chosen;
+}
+
+function renderMenuResults(menus) {
+  if (!menus.length) return '<div class="empty-state">条件に合うメニューがありません。しぼりこみを少し戻してみよう。</div>';
+  if (state.menuFilters.mode === 'all') {
+    return `<div class="card-grid">${menus.map(menuCard).join('')}</div>`;
+  }
+  return getStarterMenus(menus).map(group => `
+    <section class="menu-subject-group">
+      <div class="menu-subject-heading"><h2>${esc(subjectLabel(group.subject))}</h2><span>${group.menus.length}つ</span></div>
+      <div class="card-grid">${group.menus.map(menuCard).join('')}</div>
+    </section>`
+  ).join('');
+}
+
 function renderMenus() {
-  const menus = getFilteredMenus();
+  const allFiltered = getFilteredMenus();
+  const menus = state.menuFilters.mode === 'starter'
+    ? getStarterMenus(allFiltered).flatMap(group => group.menus)
+    : allFiltered;
   const gradeLead = state.menuFilters.grade === 'all' ? 'すべての学年' : `${state.menuFilters.grade}年生`;
+  const starter = state.menuFilters.mode === 'starter';
   return `<section class="screen">
-    ${screenHead('自学メニューから探す', `${gradeLead}のメニューを表示しています。全体では${MENU_COUNT}メニューです。`)}
+    ${screenHead('自学メニューから探す', `${gradeLead}の課題です。まずは少ない選択肢から、必要なら全体から探せます。`)}
+    <div class="menu-mode-switch" role="group" aria-label="メニューの表示方法">
+      <button type="button" class="menu-mode-button ${starter ? 'active' : ''}" data-menu-mode="starter" aria-pressed="${starter}"><strong>まずはここから</strong><span>教科ごとに3つまで</span></button>
+      <button type="button" class="menu-mode-button ${!starter ? 'active' : ''}" data-menu-mode="all" aria-pressed="${!starter}"><strong>すべてのメニュー</strong><span>${MENU_COUNT}件から探す</span></button>
+    </div>
     <div class="filters">
       <input id="menu-search" type="search" placeholder="ことばで探す" value="${esc(state.menuFilters.query)}" aria-label="メニューを検索">
       <select id="filter-grade" aria-label="学年でしぼる"><option value="all" ${state.menuFilters.grade === 'all' ? 'selected' : ''}>すべての学年</option>${[1, 2, 3, 4, 5, 6].map(grade => `<option value="${grade}" ${state.menuFilters.grade === String(grade) ? 'selected' : ''}>${grade}年</option>`).join('')}</select>
-      <select id="filter-subject" aria-label="教科でしぼる"><option value="all">すべての教科</option>${Object.values(SUBJECTS).map(s => `<option value="${s.id}" ${state.menuFilters.subject === s.id ? 'selected' : ''}>${s.label}（${DATA_COUNTS[s.id]}）</option>`).join('')}</select>
+      <select id="filter-subject" aria-label="教科でしぼる"><option value="all">すべての教科</option>${Object.values(SUBJECTS).map(s => `<option value="${s.id}" ${state.menuFilters.subject === s.id ? 'selected' : ''}>${s.label}</option>`).join('')}</select>
       <select id="filter-type" aria-label="型でしぼる"><option value="all">すべての型</option>${Object.values(MENU_TYPES).map(t => `<option value="${t.id}" ${state.menuFilters.type === t.id ? 'selected' : ''}>${t.label}</option>`).join('')}</select>
       <select id="filter-minutes" aria-label="時間でしぼる"><option value="all">すべての時間</option><option value="10" ${state.menuFilters.minutes === '10' ? 'selected' : ''}>10分くらい</option><option value="20" ${state.menuFilters.minutes === '20' ? 'selected' : ''}>20分くらい</option><option value="30" ${state.menuFilters.minutes === '30' ? 'selected' : ''}>じっくり</option></select>
     </div>
-    <p class="result-count">${menus.length}件見つかりました</p>
-    <div class="card-grid">${menus.length ? menus.map(menuCard).join('') : '<div class="empty-state">条件に合うメニューがありません。しぼりこみを少し戻してみよう。</div>'}</div>
+    <p class="result-count" id="menu-result-count">${starter ? '教科ごとの取り組みやすい課題' : `${menus.length}件見つかりました`}</p>
+    <div id="menu-results-content">${renderMenuResults(allFiltered)}</div>
   </section>`;
 }
 
@@ -658,6 +709,7 @@ function render() {
 
 function bindEvents() {
   app.querySelectorAll('[data-route]').forEach(button => button.addEventListener('click', () => navigate(button.dataset.route)));
+  app.querySelectorAll('[data-menu-mode]').forEach(button => button.addEventListener('click', () => { state.menuFilters.mode = button.dataset.menuMode; render(); }));
   app.querySelectorAll('[data-menu-id]').forEach(button => button.addEventListener('click', () => {
     clearInterval(timerState.interval);
     timerState = freshTimerState();
@@ -723,14 +775,18 @@ function showCoachStep(number) {
 }
 
 function rerenderMenuResults() {
-  const menus = getFilteredMenus();
-  const count = app.querySelector('.result-count');
-  const grid = app.querySelector('.card-grid');
-  if (count) count.textContent = `${menus.length}件見つかりました`;
-  if (grid) {
-    grid.innerHTML = menus.length ? menus.map(menuCard).join('') : '<div class="empty-state">条件に合うメニューがありません。しぼりこみを少し戻してみよう。</div>';
-    grid.querySelectorAll('[data-menu-id]').forEach(button => button.addEventListener('click', () => { state.activeMenu = MENUS.find(menu => menu.id === button.dataset.menuId); state.coachBack = null; navigate('coach'); }));
-  }
+  const allFiltered = getFilteredMenus();
+  const starter = state.menuFilters.mode === 'starter';
+  const menus = starter ? getStarterMenus(allFiltered).flatMap(group => group.menus) : allFiltered;
+  const count = app.querySelector('#menu-result-count');
+  const content = app.querySelector('#menu-results-content');
+  if (count) count.textContent = starter ? '教科ごとの取り組みやすい課題' : `${menus.length}件見つかりました`;
+  if (content) content.innerHTML = renderMenuResults(allFiltered);
+  app.querySelectorAll('#menu-results-content [data-menu-id]').forEach(button => button.addEventListener('click', () => {
+    state.activeMenu = MENUS.find(menu => menu.id === button.dataset.menuId);
+    state.coachBack = null;
+    navigate('coach');
+  }));
 }
 
 function saveTest(event) {
