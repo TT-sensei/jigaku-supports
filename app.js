@@ -529,38 +529,48 @@ function renderTests() {
   </section>`;
 }
 
-function calendarMarkup(records) {
+function calendarMarkup(records, selectedDate) {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const first = new Date(year, month, 1).getDay();
-  const last = new Date(year, month + 1, 0).getDate();
+  const year = now.getFullYear(), month = now.getMonth();
+  const first = new Date(year, month, 1).getDay(), last = new Date(year, month + 1, 0).getDate();
   const learned = new Map();
   records.filter(r => { const d = new Date(`${r.date}T00:00:00`); return d.getFullYear() === year && d.getMonth() === month; })
     .forEach(record => { const day = Number(record.date.slice(-2)); learned.set(day, (learned.get(day) || 0) + 1); });
   const cells = ['日','月','火','水','木','金','土'].map(day => `<span class="weekday">${day}</span>`);
   for (let i = 0; i < first; i++) cells.push('<span class="blank"></span>');
   for (let day = 1; day <= last; day++) {
+    const date = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const count = learned.get(day) || 0;
-    const stampLevel = count >= 3 ? 3 : count === 2 ? 2 : count === 1 ? 1 : 0;
-    const stamp = stampLevel ? '<img src="' + EDU_ASSET_ROOT + 'elements/nature/level-' + stampLevel + '/badge.webp" alt="" loading="lazy">' : '';
-    cells.push(`<span class="calendar-day ${count ? 'learned' : ''}" ${count ? `aria-label="${day}日、自学${count}件"` : ''}><span class="calendar-number">${day}</span>${stamp ? `<span class="calendar-stamp" aria-hidden="true">${stamp}</span>` : ''}</span>`);
+    const level = count >= 3 ? 3 : count === 2 ? 2 : count === 1 ? 1 : 0;
+    const stamp = level ? '<img src="' + EDU_ASSET_ROOT + 'elements/nature/level-' + level + '/badge.webp" alt="" loading="lazy">' : '';
+    const classes = ['calendar-day', count ? 'learned' : '', date === selectedDate ? 'selected' : ''].filter(Boolean).join(' ');
+    cells.push(`<button type="button" class="${classes}" data-calendar-date="${date}" aria-pressed="${date === selectedDate}" aria-label="${day}日、${count ? '自学' + count + '件' : '記録なし'}"><span class="calendar-number">${day}</span>${stamp ? `<span class="calendar-stamp" aria-hidden="true">${stamp}</span>` : ''}</button>`);
   }
   return cells.join('');
 }
 
+function renderDayRecords(records, date) {
+  const dayRecords = records.filter(record => record.date === date);
+  const heading = `${formatDate(date)}の学び`;
+  if (!dayRecords.length) return `<div class="day-record-heading"><h3>${esc(heading)}</h3><span>まだ記録はありません</span></div><p class="day-record-empty">この日はこれから。自分のペースで、またノートに足あとを残そう。</p>`;
+  return `<div class="day-record-heading"><h3>${esc(heading)}</h3><span>${dayRecords.length}件の記録</span></div><div class="day-record-list">${dayRecords.map(record => {
+    const menu = MENUS.find(item => item.id === record.menuId);
+    return `<article class="day-record-item"><span class="day-record-mark" aria-hidden="true">✓</span><div><h4>${menu ? esc(menu.title) : esc(record.menuTitle || '自学メニュー')}</h4><p>${esc(subjectLabel(record.subject))} ・ ${esc(record.minutes)}分くらい</p></div></article>`;
+  }).join('')}</div>`;
+}
+
 function renderRecords() {
-  const records = getRecords();
-  const now = new Date();
+  const records = getRecords(), now = new Date();
   const monthRecords = records.filter(r => { const d = new Date(`${r.date}T00:00:00`); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); });
   const uniqueDays = new Set(monthRecords.map(r => r.date)).size;
   const counts = Object.keys(SUBJECTS).reduce((acc, subject) => ((acc[subject] = monthRecords.filter(r => r.subject === subject).length), acc), {});
   const max = Math.max(1, ...Object.values(counts));
-  const recent = [...records].reverse().slice(0, 12);
-  const journey = learningJourney();
+  const recent = [...records].reverse().slice(0, 12), journey = learningJourney();
+  const selectedDate = monthRecords.length ? [...new Set(monthRecords.map(r => r.date))].sort().reverse()[0] : todayString();
   return `<section class="screen">${screenHead('学習記録', '今月、どんな方法で学んだかを見てみよう。')}
     <div class="record-summary"><div class="month-card"><span>${now.getMonth() + 1}月の学び</span><strong>${uniqueDays ? 'いろいろな方法' : 'これから'}</strong><span>${uniqueDays ? `${uniqueDays}日、ノートで学びました。` : '最初の自学を決めてみよう。'}</span></div><div class="subject-bars">${Object.values(SUBJECTS).map(subject => `<div class="subject-row"><span>${subject.label}</span><div class="bar"><i style="width:${counts[subject.id] / max * 100}%"></i></div><span>${counts[subject.id]}</span></div>`).join('')}</div></div>
-    <div class="panel calendar-panel"><div class="section-heading"><div><h2>${now.getMonth() + 1}月のカレンダー</h2><p>自学した日にスタンプがつくよ。学んだ足あとを見てみよう。</p></div><span class="calendar-legend">色のついた日＝自学した日</span></div><div class="calendar">${calendarMarkup(records)}</div></div><div class="tree-progress"><div class="tree-progress-art" aria-hidden="true">${journey.stage ? `<img src="${EDU_ASSET_ROOT}elements/nature/${journey.treeAsset}/badge.webp" alt="" loading="lazy">` : journey.tree}</div><div><h2>学びの木</h2><p>${journey.days.size ? `これまでに${journey.days.size}日分の足あとが残ったよ。自分のペースで育てよう。` : "最初の自学を記録すると、小さな芽が出るよ。"}</p><div class="tree-stages"><span class="${journey.stage >= 1 ? "complete" : ""}">芽</span><i></i><span class="${journey.stage >= 2 ? "complete" : ""}">葉</span><i></i><span class="${journey.stage >= 3 ? "complete" : ""}">木</span><i></i><span class="${journey.stage >= 4 ? "complete" : ""}">花</span></div></div></div>${renderBadgeCollection()}
+    <div class="panel calendar-panel"><div class="section-heading"><div><h2>${now.getMonth() + 1}月のカレンダー</h2><p>日付を押すと、その日の学習記録を見られるよ。</p></div><span class="calendar-legend">スタンプ＝自学の足あと</span></div><div class="calendar" aria-label="${now.getMonth() + 1}月の学習カレンダー">${calendarMarkup(records, selectedDate)}</div><section class="day-record-panel" id="day-record-panel" aria-live="polite">${renderDayRecords(records, selectedDate)}</section></div>
+    <div class="tree-progress"><div class="tree-progress-art" aria-hidden="true">${journey.stage ? `<img src="${EDU_ASSET_ROOT}elements/nature/${journey.treeAsset}/badge.webp" alt="" loading="lazy">` : journey.tree}</div><div><h2>学びの木</h2><p>${journey.days.size ? `これまでに${journey.days.size}日分の足あとが残ったよ。自分のペースで育てよう。` : "最初の自学を記録すると、小さな芽が出るよ。"}</p><div class="tree-stages"><span class="${journey.stage >= 1 ? "complete" : ""}">芽</span><i></i><span class="${journey.stage >= 2 ? "complete" : ""}">葉</span><i></i><span class="${journey.stage >= 3 ? "complete" : ""}">木</span><i></i><span class="${journey.stage >= 4 ? "complete" : ""}">花</span></div></div></div>${renderBadgeCollection()}
     <div class="record-list">${recent.length ? recent.map(record => { const menu = MENUS.find(m => m.id === record.menuId); return `<article class="record-item"><div class="date-badge">${formatDate(record.date)}</div><div><h3>${menu ? esc(menu.title) : esc(record.menuTitle || '自学メニュー')}</h3><p>${subjectLabel(record.subject)}・${record.minutes}分くらい</p></div></article>`; }).join('') : '<div class="empty-state">まだ記録はありません。自学が終わったら「できた！」から記録できます。</div>'}</div>
   </section>`;
 }
@@ -631,6 +641,16 @@ function bindEvents() {
   app.querySelectorAll('[data-test-study]').forEach(button => button.addEventListener('click', () => startTestStudy(button.dataset.testStudy)));
   app.querySelectorAll('[data-delete-test]').forEach(button => button.addEventListener('click', () => deleteTest(button.dataset.deleteTest)));
   app.querySelectorAll('[data-resource-group]').forEach(button => button.addEventListener('click', () => { state.resourceGroup = button.dataset.resourceGroup; render(); }));
+  app.querySelectorAll('[data-calendar-date]').forEach(button => button.addEventListener('click', () => {
+    const date = button.dataset.calendarDate;
+    app.querySelectorAll('[data-calendar-date]').forEach(day => {
+      const selected = day.dataset.calendarDate === date;
+      day.classList.toggle('selected', selected);
+      day.setAttribute('aria-pressed', String(selected));
+    });
+    const panel = app.querySelector('#day-record-panel');
+    if (panel) panel.innerHTML = renderDayRecords(getRecords(), date);
+  }));
 }
 
 function showCoachStep(number) {
