@@ -186,6 +186,18 @@ function renderBadgeCollection() {
   const data = learningJourney();
   return '<div class="panel badge-panel"><div class="section-heading"><div><h2>自学バッジ図鑑</h2><p>いろいろな学びの足あとが、バッジになって残るよ。</p></div><span class="badge-count">' + data.badges.filter(b => b.earned).length + ' / ' + data.badges.length + '</span></div><div class="badge-grid">' + data.badges.map(b => '<article class="badge-card ' + (b.earned ? 'earned' : 'locked') + '"><span class="badge-art"><img src="' + EDU_ASSET_ROOT + 'badges/common/' + b.asset + '/badge.webp" alt="" loading="lazy"></span><div><h3>' + b.title + '</h3><p>' + b.desc + '</p><span class="badge-status">' + (b.earned ? '獲得したよ' : 'これからのお楽しみ') + '</span></div></article>').join('') + '</div></div>';
 }
+function subjectsForGrade(grade) {
+  const available = new Set(MENUS.filter(menu => menu.grades.includes(Number(grade))).map(menu => menu.subject));
+  return Object.values(SUBJECTS).filter(subject => available.has(subject.id));
+}
+
+function renderGradePicker() {
+  return `<section class="grade-picker" aria-labelledby="grade-picker-title">
+    <div class="grade-picker-copy"><strong id="grade-picker-title">今の学年</strong><span>選んだ学年に合う自学を提案します。</span></div>
+    <div class="grade-picker-options" role="group" aria-label="学年を選ぶ">${[1, 2, 3, 4, 5, 6].map(grade => `<button type="button" data-select-grade="${grade}" class="${state.grade === grade ? 'selected' : ''}" aria-pressed="${state.grade === grade}">${grade}年</button>`).join('')}</div>
+  </section>`;
+}
+
 function renderHome() {
   const upcoming = getTests().filter(test => daysFromToday(test.date) >= 0).sort((a, b) => a.date.localeCompare(b.date))[0];
   const testHint = upcoming ? `${subjectLabel(upcoming.subject)}「${esc(upcoming.name)}」の予定があります。` : 'テストの予定を自分で登録できます。';
@@ -201,6 +213,7 @@ function renderHome() {
         <span class="image-fallback" aria-hidden="true">📓</span>
       </div>
     </div>
+    ${renderGradePicker()}
     ${renderJourneyHome()}
     <div class="main-grid">
       <button class="entrance-card primary" type="button" data-route="decide">
@@ -226,6 +239,7 @@ function renderHome() {
 }
 
 function renderDecide() {
+  const availableSubjects = subjectsForGrade(state.grade);
   return `<section class="screen">
     ${screenHead('今日の自学を決める', '答えは一つではありません。最後は自分で選ぼう。')}
     <div class="panel">
@@ -243,7 +257,7 @@ function renderDecide() {
         <span class="step-kicker">STEP 3 / 3</span><h2>教科は決まっている？</h2>
         <div class="choice-grid">
           <button class="choice-button ${state.coach.subject === 'all' ? 'selected' : ''}" type="button" data-coach-subject="all">どの教科でも</button>
-          ${Object.values(SUBJECTS).map(subject => `<button class="choice-button subject-${subject.id} ${state.coach.subject === subject.id ? 'selected' : ''}" type="button" data-coach-subject="${subject.id}">${subject.label}</button>`).join('')}
+          ${availableSubjects.map(subject => `<button class="choice-button subject-${subject.id} ${state.coach.subject === subject.id ? 'selected' : ''}" type="button" data-coach-subject="${subject.id}">${subject.label}</button>`).join('')}
         </div>
         <div class="coach-nav"><button class="secondary-button" type="button" data-coach-back="2">← もどる</button><button class="primary-button" type="button" id="show-candidates" ${state.coach.subject ? '' : 'disabled'}>三つ見てみる</button></div>
       </div>
@@ -559,7 +573,7 @@ function renderTests() {
   return `<section class="screen">${screenHead('テスト予定', '予定を見て、何を確かめるかは自分で決めよう。')}
     <div class="panel">
       <form id="test-form"><div class="form-grid">
-        <label class="field">教科<select name="subject" required>${Object.values(SUBJECTS).filter(s => s.id !== 'cross').map(s => `<option value="${s.id}">${s.label}</option>`).join('')}</select></label>
+        <label class="field">教科<select name="subject" required>${subjectsForGrade(state.grade).filter(s => s.id !== 'cross').map(s => `<option value="${s.id}">${s.label}</option>`).join('')}</select></label>
         <label class="field">テスト名<input name="name" maxlength="40" required placeholder="例：分数のたし算"></label>
         <label class="field">日付<input name="date" type="date" min="${todayString()}" required></label>
         <label class="field">範囲（書かなくてもOK）<input name="range" maxlength="80" placeholder="例：教科書 42〜55ページ"></label>
@@ -651,6 +665,16 @@ function render() {
 }
 
 function bindEvents() {
+  app.querySelectorAll('[data-select-grade]').forEach(button => button.addEventListener('click', () => {
+    const grade = Number(button.dataset.selectGrade);
+    if (!Number.isInteger(grade) || grade < 1 || grade > 6 || grade === state.grade) return;
+    state.grade = grade;
+    saveSettings();
+    state.menuFilters = { query: '', grade: String(grade), subject: 'all', type: 'all', minutes: 'all' };
+    state.coach.subject = null;
+    state.candidates = [];
+    render();
+  }));
   app.querySelectorAll('[data-route]').forEach(button => button.addEventListener('click', () => navigate(button.dataset.route)));
   app.querySelectorAll('[data-menu-id]').forEach(button => button.addEventListener('click', () => {
     clearInterval(timerState.interval);
