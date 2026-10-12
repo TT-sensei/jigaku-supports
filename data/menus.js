@@ -496,6 +496,17 @@ const EXTRA_RESOURCE_BY_TITLE = {
   ],
   "もしもタイムスリップ自学": [
     "history"
+  ],
+  "電気の通り道を図解": [
+    "science3",
+    "science6"
+  ],
+  "月の形と位置を調べる": [
+    "science4",
+    "science6"
+  ],
+  "面積・体積の公式の意味": [
+    "solid"
   ]
 };
 
