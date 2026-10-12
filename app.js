@@ -115,6 +115,35 @@ function screenHead(title, lead = '', back = 'home') {
   </div>`;
 }
 
+function learningJourney() {
+  const records = getRecords();
+  const days = new Set(records.map(r => r.date));
+  const subjects = new Set(records.map(r => r.subject));
+  const month = todayString().slice(0, 7);
+  const monthDays = new Set(records.filter(r => r.date.startsWith(month)).map(r => r.date));
+  const badges = [
+    { icon: '🌱', title: 'はじめの一歩', desc: '自学を1回記録した', earned: records.length >= 1 },
+    { icon: '🌼', title: '学びの足あと', desc: '5日分の記録ができた', earned: days.size >= 5 },
+    { icon: '📚', title: '学びを積み重ねた', desc: '自学を10回記録した', earned: records.length >= 10 },
+    { icon: '🧭', title: '教科をめぐる旅', desc: '3つの教科で学んだ', earned: subjects.size >= 3 },
+    { icon: '🌟', title: '今月の積み重ね', desc: '今月5日、自学に取り組んだ', earned: monthDays.size >= 5 },
+    { icon: '🌳', title: '学びの木が育つ', desc: '20日分の記録ができた', earned: days.size >= 20 }
+  ];
+  const stage = days.size >= 20 ? 4 : days.size >= 10 ? 3 : days.size >= 5 ? 2 : days.size >= 1 ? 1 : 0;
+  return { records, days, subjects, monthDays, badges, stage, tree: ['🌰','🌱','🌿','🌳','🌸'][stage] };
+}
+
+function renderJourneyHome() {
+  const data = learningJourney();
+  const next = data.badges.find(b => !b.earned);
+  const todayDone = data.records.some(r => r.date === todayString());
+  return '<section class="progress-home" aria-label="わたしの自学"><div class="progress-home-head"><div><span class="progress-kicker">MY LEARNING JOURNEY</span><h2>わたしの自学</h2><p>' + (todayDone ? '今日の一歩、ちゃんと残ったね。' : '今日の自学も、小さな一歩から。') + '</p></div><div class="growing-tree" aria-hidden="true">' + data.tree + '</div></div><div class="progress-home-stats"><div><span class="progress-stat-icon">✦</span><strong>' + data.days.size + '</strong><span>自学した日</span></div><div><span class="progress-stat-icon">▦</span><strong>' + data.records.length + '</strong><span>学びの記録</span></div><div><span class="progress-stat-icon">🏅</span><strong>' + data.badges.filter(b => b.earned).length + '/' + data.badges.length + '</strong><span>バッジ</span></div></div><div class="progress-home-bottom"><span>' + (next ? 'つぎの目標：' + next.title + ' — ' + next.desc : 'すべてのバッジを獲得！自分らしい学びを続けよう。') + '</span><button type="button" class="progress-link" data-route="records">足あとを見る →</button></div></section>';
+}
+
+function renderBadgeCollection() {
+  const data = learningJourney();
+  return '<div class="panel badge-panel"><div class="section-heading"><div><h2>自学バッジ図鑑</h2><p>いろいろな学びの足あとが、バッジになって残るよ。</p></div><span class="badge-count">' + data.badges.filter(b => b.earned).length + ' / ' + data.badges.length + '</span></div><div class="badge-grid">' + data.badges.map(b => '<article class="badge-card ' + (b.earned ? 'earned' : 'locked') + '"><span class="badge-art" aria-hidden="true">' + (b.earned ? b.icon : '◇') + '</span><div><h3>' + b.title + '</h3><p>' + b.desc + '</p><span class="badge-status">' + (b.earned ? '獲得したよ' : 'これからのお楽しみ') + '</span></div></article>').join('') + '</div></div>';
+}
 function renderHome() {
   const upcoming = getTests().filter(test => daysFromToday(test.date) >= 0).sort((a, b) => a.date.localeCompare(b.date))[0];
   const testHint = upcoming ? `${subjectLabel(upcoming.subject)}「${esc(upcoming.name)}」の予定があります。` : 'テストの予定を自分で登録できます。';
@@ -130,6 +159,7 @@ function renderHome() {
         <span class="image-fallback" aria-hidden="true">📓</span>
       </div>
     </div>
+    ${renderJourneyHome()}
     <div class="main-grid">
       <button class="entrance-card primary" type="button" data-route="decide">
         <span class="icon" aria-hidden="true">◎</span><h2>今日の自学を決める</h2>
@@ -518,9 +548,10 @@ function renderRecords() {
   const counts = Object.keys(SUBJECTS).reduce((acc, subject) => ((acc[subject] = monthRecords.filter(r => r.subject === subject).length), acc), {});
   const max = Math.max(1, ...Object.values(counts));
   const recent = [...records].reverse().slice(0, 12);
+  const journey = learningJourney();
   return `<section class="screen">${screenHead('学習記録', '今月、どんな方法で学んだかを見てみよう。')}
     <div class="record-summary"><div class="month-card"><span>${now.getMonth() + 1}月の学び</span><strong>${uniqueDays ? 'いろいろな方法' : 'これから'}</strong><span>${uniqueDays ? `${uniqueDays}日、ノートで学びました。` : '最初の自学を決めてみよう。'}</span></div><div class="subject-bars">${Object.values(SUBJECTS).map(subject => `<div class="subject-row"><span>${subject.label}</span><div class="bar"><i style="width:${counts[subject.id] / max * 100}%"></i></div><span>${counts[subject.id]}</span></div>`).join('')}</div></div>
-    <div class="panel"><h2>${now.getMonth() + 1}月のカレンダー</h2><div class="calendar">${calendarMarkup(records)}</div></div>
+    <div class="panel calendar-panel"><div class="section-heading"><div><h2>${now.getMonth() + 1}月のカレンダー</h2><p>自学した日にスタンプがつくよ。学んだ足あとを見てみよう。</p></div><span class="calendar-legend">色のついた日＝自学した日</span></div><div class="calendar">${calendarMarkup(records)}</div></div><div class="tree-progress"><div class="tree-progress-art" aria-hidden="true">${journey.tree}</div><div><h2>学びの木</h2><p>${journey.days.size ? `これまでに${journey.days.size}日分の足あとが残ったよ。自分のペースで育てよう。` : "最初の自学を記録すると、小さな芽が出るよ。"}</p><div class="tree-stages"><span class="${journey.stage >= 1 ? "complete" : ""}">芽</span><i></i><span class="${journey.stage >= 2 ? "complete" : ""}">葉</span><i></i><span class="${journey.stage >= 3 ? "complete" : ""}">木</span><i></i><span class="${journey.stage >= 4 ? "complete" : ""}">花</span></div></div></div>${renderBadgeCollection()}
     <div class="record-list">${recent.length ? recent.map(record => { const menu = MENUS.find(m => m.id === record.menuId); return `<article class="record-item"><div class="date-badge">${formatDate(record.date)}</div><div><h3>${menu ? esc(menu.title) : esc(record.menuTitle || '自学メニュー')}</h3><p>${subjectLabel(record.subject)}・${record.minutes}分くらい</p></div></article>`; }).join('') : '<div class="empty-state">まだ記録はありません。自学が終わったら「できた！」から記録できます。</div>'}</div>
   </section>`;
 }
