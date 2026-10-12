@@ -1,5 +1,5 @@
 import { StorageManager } from './vendor/storage-manager.js';
-import { MENUS, MENU_TYPES, SUBJECTS, DATA_COUNTS } from './data/menus.js';
+import { MENUS, MENU_TYPES, SUBJECTS, DATA_COUNTS } from './data/menus.js?v=2';
 
 const storage = new StorageManager('jigaku-coach-v1');
 const app = document.querySelector('#app');
