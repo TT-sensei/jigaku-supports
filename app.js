@@ -533,10 +533,16 @@ function calendarMarkup(records) {
   const month = now.getMonth();
   const first = new Date(year, month, 1).getDay();
   const last = new Date(year, month + 1, 0).getDate();
-  const learned = new Set(records.filter(r => { const d = new Date(`${r.date}T00:00:00`); return d.getFullYear() === year && d.getMonth() === month; }).map(r => Number(r.date.slice(-2))));
+  const learned = new Map();
+  records.filter(r => { const d = new Date(`${r.date}T00:00:00`); return d.getFullYear() === year && d.getMonth() === month; })
+    .forEach(record => { const day = Number(record.date.slice(-2)); learned.set(day, (learned.get(day) || 0) + 1); });
   const cells = ['日','月','火','水','木','金','土'].map(day => `<span class="weekday">${day}</span>`);
   for (let i = 0; i < first; i++) cells.push('<span class="blank"></span>');
-  for (let day = 1; day <= last; day++) cells.push(`<span class="${learned.has(day) ? 'learned' : ''}" ${learned.has(day) ? 'aria-label="学習した日"' : ''}>${day}</span>`);
+  for (let day = 1; day <= last; day++) {
+    const count = learned.get(day) || 0;
+    const stamp = count >= 3 ? '🌟' : count === 2 ? '🌼' : count === 1 ? '✦' : '';
+    cells.push(`<span class="calendar-day ${count ? 'learned' : ''}" ${count ? `aria-label="${day}日、自学${count}件"` : ''}><span class="calendar-number">${day}</span>${stamp ? `<span class="calendar-stamp" aria-hidden="true">${stamp}</span>` : ''}</span>`);
+  }
   return cells.join('');
 }
 
