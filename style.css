@@ -339,3 +339,16 @@ footer { min-height: 64px; display: flex; justify-content: space-between; gap: 1
 .tree-progress{display:flex;align-items:center;gap:16px;margin:16px 0;padding:18px 22px;border:1px solid var(--line);border-radius:20px;background:#f5f3e7}.tree-progress-art{flex:0 0 66px;width:66px;height:66px;display:grid;place-items:center;border-radius:50%;background:#e4ebd9;font-size:2.7rem}.tree-progress h2{margin:0 0 5px;font-size:1.2rem}.tree-progress p{margin:0;color:var(--muted);line-height:1.55;font-size:.88rem}.tree-stages{display:flex;align-items:center;gap:7px;margin-top:10px;max-width:340px;color:#9c9b8a;font-size:.76rem;font-weight:800}.tree-stages span{padding:4px 8px;border-radius:999px;background:#e8e5d8;white-space:nowrap}.tree-stages span.complete{color:#fff;background:var(--green)}.tree-stages i{height:2px;flex:1;background:#d9d3c1}
 .badge-panel{margin-top:16px}.badge-count{flex:0 0 auto;padding:7px 11px;border-radius:999px;background:var(--green-soft);color:var(--green-dark);font-weight:900;font-variant-numeric:tabular-nums}.badge-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.badge-card{display:flex;align-items:center;gap:12px;min-width:0;padding:13px;border:1px solid var(--line);border-radius:15px;background:#fff}.badge-card.locked{background:#f8f6ef}.badge-art{flex:0 0 48px;width:48px;height:48px;display:grid;place-items:center;border-radius:50%;border:2px solid #e6c66f;background:#fff4cf;font-size:1.6rem}.badge-card.locked .badge-art{color:#aaa695;border-color:#ded9cb;background:#eeece4;font-size:1.4rem}.badge-card h3{margin:0 0 3px;font-size:.95rem}.badge-card p{margin:0 0 4px;color:var(--muted);font-size:.79rem;line-height:1.4}.badge-status{color:var(--green-dark);font-size:.72rem;font-weight:900}.badge-card.locked .badge-status{color:#898679}
 @media(max-width:600px){.progress-home{padding:17px}.progress-home-stats{gap:6px}.progress-home-stats>div{grid-template-columns:1fr;text-align:center;padding:10px 5px;gap:3px}.progress-stat-icon{grid-row:auto}.progress-home-stats strong{font-size:1.2rem}.progress-home-stats span:last-child{font-size:.68rem}.progress-home-bottom{align-items:flex-start;flex-direction:column}.calendar-legend{max-width:120px;line-height:1.6}.tree-progress{align-items:flex-start;padding:15px;gap:12px}.tree-progress-art{flex-basis:50px;width:50px;height:50px;font-size:2rem}.badge-grid{grid-template-columns:1fr}}
+
+
+/* Shared reward artwork from edu-assets (lightweight WebP) */
+.growing-tree img{width:58px;height:58px;object-fit:contain}
+.badge-art{overflow:hidden;padding:3px}
+.badge-art img{display:block;width:100%;height:100%;object-fit:contain}
+.badge-card.locked .badge-art img{filter:grayscale(1);opacity:.38}
+.calendar-stamp{width:24px;height:24px;display:grid;place-items:center}
+.calendar-stamp img{display:block;width:100%;height:100%;object-fit:contain}
+.calendar-day.learned{position:relative;gap:0;padding:3px 0;background:#e3eee1;color:var(--green-dark);border:1px solid #b9d0ba}
+.calendar-number{font-size:.76rem;line-height:1.1}
+.calendar-day .calendar-stamp{margin-top:1px}
+.tree-progress-art img{width:58px;height:58px;object-fit:contain}
