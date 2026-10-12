@@ -48,7 +48,7 @@
 - `index.html` — アプリの入口
 - `style.css` — あたたかい教室・ノート調のレスポンシブUI
 - `app.js` — 画面、推薦、アプリ案内、予定、記録、localStorage連携
-- `data/menus.js` — 248件の自学メニューと4型テンプレート
+- `data/menus.js` — 249件の自学メニューと4型テンプレート
 
 ## License
 
