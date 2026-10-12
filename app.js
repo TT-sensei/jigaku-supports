@@ -191,13 +191,6 @@ function subjectsForGrade(grade) {
   return Object.values(SUBJECTS).filter(subject => available.has(subject.id));
 }
 
-function renderGradePicker() {
-  return `<section class="grade-picker" aria-labelledby="grade-picker-title">
-    <div class="grade-picker-copy"><strong id="grade-picker-title">今の学年</strong><span>選んだ学年に合う自学を提案します。</span></div>
-    <div class="grade-picker-options" role="group" aria-label="学年を選ぶ">${[1, 2, 3, 4, 5, 6].map(grade => `<button type="button" data-select-grade="${grade}" class="${state.grade === grade ? 'selected' : ''}" aria-pressed="${state.grade === grade}">${grade}年</button>`).join('')}</div>
-  </section>`;
-}
-
 function renderHome() {
   const upcoming = getTests().filter(test => daysFromToday(test.date) >= 0).sort((a, b) => a.date.localeCompare(b.date))[0];
   const testHint = upcoming ? `${subjectLabel(upcoming.subject)}「${esc(upcoming.name)}」の予定があります。` : 'テストの予定を自分で登録できます。';
@@ -213,7 +206,6 @@ function renderHome() {
         <span class="image-fallback" aria-hidden="true">📓</span>
       </div>
     </div>
-    ${renderGradePicker()}
     ${renderJourneyHome()}
     <div class="main-grid">
       <button class="entrance-card primary" type="button" data-route="decide">
@@ -665,16 +657,6 @@ function render() {
 }
 
 function bindEvents() {
-  app.querySelectorAll('[data-select-grade]').forEach(button => button.addEventListener('click', () => {
-    const grade = Number(button.dataset.selectGrade);
-    if (!Number.isInteger(grade) || grade < 1 || grade > 6 || grade === state.grade) return;
-    state.grade = grade;
-    saveSettings();
-    state.menuFilters = { query: '', grade: String(grade), subject: 'all', type: 'all', minutes: 'all' };
-    state.coach.subject = null;
-    state.candidates = [];
-    render();
-  }));
   app.querySelectorAll('[data-route]').forEach(button => button.addEventListener('click', () => navigate(button.dataset.route)));
   app.querySelectorAll('[data-menu-id]').forEach(button => button.addEventListener('click', () => {
     clearInterval(timerState.interval);
