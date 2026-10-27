@@ -1,9 +1,12 @@
 import { StorageManager } from './vendor/storage-manager.js';
-import { MENUS, MENU_TYPES, SUBJECTS, DATA_COUNTS } from './data/menus.js?v=3';
+import { MENUS, MENU_TYPES, SUBJECTS, DATA_COUNTS } from './data/menus.js?v=4';
 
 const storage = new StorageManager('jigaku-coach-v1');
 const app = document.querySelector('#app');
 const MENU_COUNT = MENUS.length;
+const PURPOSE_ORDER = ['復習', '覚える', '苦手', 'テスト', '整理', 'もっと知る', '疑問', 'チャレンジ'];
+const SEARCH_SYNONYMS = [['辞書', '辞典'], ['掛け算', 'かけ算'], ['割り算', 'わり算'], ['足し算', 'たし算'], ['引き算', 'ひき算']];
+const normalizeSearchText = text => SEARCH_SYNONYMS.reduce((t, [a, b]) => t.split(a).join(b), String(text).toLowerCase());
 const EDU_ASSET_ROOT = 'https://tt-sensei.github.io/edu-assets/assets/web/';
 const IMG_ROOT = 'https://tt-sensei.github.io/navi-character-/assets/web/';
 const HERO_IMAGES = [
@@ -100,7 +103,7 @@ let state = {
   candidates: [],
   activeMenu: null,
   coachBack: null,
-  menuFilters: { query: '', grade: String(Number(storage.load('settings', {}).grade) || 3), subject: 'all', type: 'all', minutes: 'all', mode: 'starter' },
+  menuFilters: { query: '', grade: String(Number(storage.load('settings', {}).grade) || 3), subject: 'all', type: 'all', purpose: 'all', minutes: 'all', mode: 'starter' },
   resourceGroup: 'video',
   resourceSubject: 'all'
 };
@@ -141,6 +144,10 @@ function saveSettings() {
 }
 
 function navigate(route, data = {}) {
+  if (route === 'menus' && state.route !== 'menus') {
+    state.menuFilters.grade = String(state.grade);
+    if (state.menuFilters.subject !== 'all' && !MENUS.some(menu => menu.subject === state.menuFilters.subject && menu.grades.includes(state.grade))) state.menuFilters.subject = 'all';
+  }
   if (route !== 'coach') {
     clearInterval(timerState.interval);
     timerState = freshTimerState();
@@ -337,8 +344,9 @@ function getFilteredMenus() {
     .filter(menu => f.grade === 'all' || menu.grades.includes(Number(f.grade)))
     .filter(menu => f.subject === 'all' || menu.subject === f.subject)
     .filter(menu => f.type === 'all' || menu.type === f.type)
+    .filter(menu => f.purpose === 'all' || menu.purposes.includes(f.purpose))
     .filter(menu => f.minutes === 'all' || (f.minutes === '10' ? menu.minutes <= 12 : f.minutes === '20' ? menu.minutes >= 13 && menu.minutes <= 22 : menu.minutes >= 23))
-    .filter(menu => !f.query || `${menu.title} ${menu.instruction} ${menu.purposes.join(' ')}`.toLowerCase().includes(f.query.toLowerCase()));
+    .filter(menu => !f.query || normalizeSearchText(`${menu.title} ${menu.instruction} ${menu.goalExample} ${menu.materials.join(' ')} ${menu.whenToUse} ${menu.purposes.join(' ')} ${subjectLabel(menu.subject)} ${typeLabel(menu.type)}`).includes(normalizeSearchText(f.query)));
 }
 
 function getStarterMenus(menus) {
@@ -374,7 +382,21 @@ function getStarterMenus(menus) {
 function renderMenuResults(menus) {
   if (!menus.length) return '<div class="empty-state">条件に合うメニューがありません。しぼりこみを少し戻してみよう。</div>';
   if (state.menuFilters.mode === 'all') {
-    return `<div class="card-grid">${menus.map(menuCard).join('')}</div>`;
+    const groups = new Map();
+    for (const menu of menus) {
+      if (!groups.has(menu.subject)) groups.set(menu.subject, []);
+      groups.get(menu.subject).push(menu);
+    }
+    const subjectOrder = Object.keys(SUBJECTS);
+    return [...groups.entries()]
+      .sort((a, b) => subjectOrder.indexOf(a[0]) - subjectOrder.indexOf(b[0]))
+      .map(([subject, items]) => {
+        const sorted = [...items].sort((a, b) =>
+          ((a.grades.includes(state.grade) ? 0 : 1) - (b.grades.includes(state.grade) ? 0 : 1)) ||
+          (Math.min(...a.grades) - Math.min(...b.grades)) ||
+          (a.difficulty - b.difficulty) || (a.minutes - b.minutes) || a.id.localeCompare(b.id));
+        return `<section class="menu-subject-group"><div class="menu-subject-heading"><h2>${esc(subjectLabel(subject))}</h2><span>${sorted.length}件</span></div><div class="card-grid">${sorted.map(menuCard).join('')}</div></section>`;
+      }).join('');
   }
   return getStarterMenus(menus).map(group => `
     <section class="menu-subject-group">
@@ -402,6 +424,7 @@ function renderMenus() {
       <select id="filter-grade" aria-label="学年でしぼる"><option value="all" ${state.menuFilters.grade === 'all' ? 'selected' : ''}>すべての学年</option>${[1, 2, 3, 4, 5, 6].map(grade => `<option value="${grade}" ${state.menuFilters.grade === String(grade) ? 'selected' : ''}>${grade}年</option>`).join('')}</select>
       <select id="filter-subject" aria-label="教科でしぼる"><option value="all">すべての教科</option>${Object.values(SUBJECTS).map(s => { const count = state.menuFilters.grade === 'all' ? DATA_COUNTS[s.id] : MENUS.filter(m => m.subject === s.id && m.grades.includes(Number(state.menuFilters.grade))).length; return `<option value="${s.id}" ${state.menuFilters.subject === s.id ? 'selected' : ''} ${count === 0 ? 'disabled' : ''}>${s.label}（${count}件）</option>`; }).join('')}</select>
       <select id="filter-type" aria-label="型でしぼる"><option value="all">すべての型</option>${Object.values(MENU_TYPES).map(t => `<option value="${t.id}" ${state.menuFilters.type === t.id ? 'selected' : ''}>${t.label}</option>`).join('')}</select>
+      <select id="filter-purpose" aria-label="目的でしぼる"><option value="all">すべての目的</option>${PURPOSE_ORDER.filter(p => MENUS.some(m => m.purposes.includes(p))).map(p => `<option value="${p}" ${state.menuFilters.purpose === p ? 'selected' : ''}>${p}</option>`).join('')}</select>
       <select id="filter-minutes" aria-label="時間でしぼる"><option value="all">すべての時間</option><option value="10" ${state.menuFilters.minutes === '10' ? 'selected' : ''}>10分くらい</option><option value="20" ${state.menuFilters.minutes === '20' ? 'selected' : ''}>20分くらい</option><option value="30" ${state.menuFilters.minutes === '30' ? 'selected' : ''}>じっくり</option></select>
     </div>
     <p class="result-count" id="menu-result-count">${starter ? '教科ごとの取り組みやすい課題' : `${menus.length}件見つかりました`}</p>
@@ -754,6 +777,7 @@ function bindEvents() {
   app.querySelector('#menu-search')?.addEventListener('input', event => { state.menuFilters.query = event.target.value; rerenderMenuResults(); });
   app.querySelector('#filter-grade')?.addEventListener('change', event => { state.menuFilters.grade = event.target.value; if (state.menuFilters.subject !== 'all' && state.menuFilters.grade !== 'all' && !MENUS.some(menu => menu.subject === state.menuFilters.subject && menu.grades.includes(Number(state.menuFilters.grade)))) state.menuFilters.subject = 'all'; render(); });
   app.querySelector('#filter-subject')?.addEventListener('change', event => { state.menuFilters.subject = event.target.value; render(); });
+  app.querySelector('#filter-purpose')?.addEventListener('change', event => { state.menuFilters.purpose = event.target.value; render(); });
   app.querySelector('#filter-type')?.addEventListener('change', event => { state.menuFilters.type = event.target.value; render(); });
   app.querySelector('#filter-minutes')?.addEventListener('change', event => { state.menuFilters.minutes = event.target.value; render(); });
   app.querySelector('#test-form')?.addEventListener('submit', saveTest);
