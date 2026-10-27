@@ -370,7 +370,13 @@ const resourceMap = {
   history: { title: 'れきし探偵団', url: 'https://tt-sensei.github.io/rekisijinbutu/' },
   civics: { title: '公民くん', url: 'https://tt-sensei.github.io/kouminkun/' },
   socialgame: { title: '社会科ゲームブック', url: 'https://tt-sensei.github.io/shakai-gamebook/' },
-  world: { title: 'WORLD QUEST', url: 'https://tt-sensei.github.io/world-quest/' }
+  world: { title: 'WORLD QUEST', url: 'https://tt-sensei.github.io/world-quest/' },
+  interview: { title: 'インタビュー学習', url: 'https://tt-sensei.github.io/interviews-/' },
+  combinatorics: { title: 'ならべる？えらぶ？', url: 'https://tt-sensei.github.io/narabikumiawase/' },
+  datadetective: { title: '町のデータ探偵団', url: 'https://tt-sensei.github.io/detakatuyou/' },
+  clock: { title: '時計べんきょう', url: 'https://tt-sensei.github.io/tokeibenkyo/' },
+  historyMusubi: { title: '歴史結び', url: 'https://tt-sensei.github.io/rekisijinbutu/history-match/' },
+  historyJunban: { title: '歴史順番', url: 'https://tt-sensei.github.io/rekisijinbutu/history-order/' }
 };
 
 const EXTRA_RESOURCE_BY_TITLE = {
@@ -540,7 +546,26 @@ const EXTRA_RESOURCE_BY_TITLE = {
   ],
   "面積や体積の公式を図で説明する": [
     "solid"
-  ]
+  ],
+  "単位を身近な物で確かめる": ["unit"],
+  "単位どうしの関係を図にまとめる": ["unit"],
+  "あまりのあるわり算をたしかめる": ["division"],
+  "起こり方を樹形図に表す": ["combinatorics"],
+  "資料の平均や中央値などを比べる": ["datadetective"],
+  "時計を見て時こくを読む": ["clock"],
+  "時計で時間を感じる": ["clock"],
+  "一文をくわしく育てる": ["grammar"],
+  "慣用句の意味とイラスト": ["words"],
+  "身近な植物のつくりを観察してまとめる": ["science3"],
+  "一日の天気の変化を記録する": ["science4"],
+  "磁石につくものを予想して確かめる": ["science3"],
+  "季節と生き物の変化記録": ["science4"],
+  "縄文時代と弥生時代のくらしを比べる": ["history"],
+  "明治維新でくらしや社会がどう変わったか": ["history"],
+  "地域の目印になる建物を見つけて紹介する": ["map"],
+  "歴史人物のしたことと時代を紹介する": ["history", "historyMusubi"],
+  "オリジナル年表を作る": ["historyJunban"],
+  "家族に一つ質問して、答えをまとめる": ["interview"]
 };
 
 export const MENU_TYPES = Object.fromEntries(Object.entries(TYPE_DEFAULTS).map(([id, value]) => [id, { id, ...value }]));
