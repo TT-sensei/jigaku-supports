@@ -1,5 +1,5 @@
 import { StorageManager } from './vendor/storage-manager.js';
-import { MENUS, MENU_TYPES, SUBJECTS, DATA_COUNTS } from './data/menus.js?v=4';
+import { MENUS, MENU_TYPES, SUBJECTS, DATA_COUNTS } from './data/menus.js?v=5';
 
 const storage = new StorageManager('jigaku-coach-v1');
 const app = document.querySelector('#app');
@@ -109,7 +109,7 @@ let state = {
 };
 let lastHeroImage = '';
 let timerState = { totalSeconds: 30 * 60, remainingSeconds: 30 * 60, running: false, finished: false, startedAt: null, interval: null };
-const freshTimerState = () => ({ totalSeconds: 30 * 60, remainingSeconds: 30 * 60, running: false, finished: false, startedAt: null, interval: null });
+const freshTimerState = (minutes = 30) => ({ totalSeconds: minutes * 60, remainingSeconds: minutes * 60, running: false, finished: false, startedAt: null, interval: null });
 
 const esc = value => String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 const todayString = () => {
@@ -292,7 +292,10 @@ function chooseCandidates() {
   const picks = [];
   for (const item of scored) {
     if (picks.length >= 3) break;
-    if (picks.length < 2 && picks.some(menu => menu.type === item.menu.type) && scored.length > 5) continue;
+    if (picks.length < 2 && scored.length > 5) {
+      if (picks.some(menu => menu.type === item.menu.type)) continue;
+      if (state.coach.subject === 'all' && picks.some(menu => menu.subject === item.menu.subject)) continue;
+    }
     picks.push(item.menu);
   }
   if (picks.length < 3) scored.forEach(item => { if (picks.length < 3 && !picks.includes(item.menu)) picks.push(item.menu); });
@@ -739,8 +742,8 @@ function bindEvents() {
   app.querySelectorAll('[data-menu-mode]').forEach(button => button.addEventListener('click', () => { state.menuFilters.mode = button.dataset.menuMode; render(); }));
   app.querySelectorAll('[data-menu-id]').forEach(button => button.addEventListener('click', () => {
     clearInterval(timerState.interval);
-    timerState = freshTimerState();
     state.activeMenu = MENUS.find(menu => menu.id === button.dataset.menuId);
+    timerState = freshTimerState(state.activeMenu?.minutes || 30);
     state.coachBack = null;
     navigate('coach');
   }));
@@ -811,7 +814,9 @@ function rerenderMenuResults() {
   if (count) count.textContent = starter ? '教科ごとの取り組みやすい課題' : `${menus.length}件見つかりました`;
   if (content) content.innerHTML = renderMenuResults(allFiltered);
   app.querySelectorAll('#menu-results-content [data-menu-id]').forEach(button => button.addEventListener('click', () => {
+    clearInterval(timerState.interval);
     state.activeMenu = MENUS.find(menu => menu.id === button.dataset.menuId);
+    timerState = freshTimerState(state.activeMenu?.minutes || 30);
     state.coachBack = null;
     navigate('coach');
   }));
