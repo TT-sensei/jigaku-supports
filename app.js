@@ -1,5 +1,5 @@
 import { StorageManager } from './vendor/storage-manager.js';
-import { MENUS, MENU_TYPES, SUBJECTS, DATA_COUNTS } from './data/menus.js?v=6';
+import { MENUS, MENU_TYPES, SUBJECTS, DATA_COUNTS } from './data/menus.js?v=7';
 
 const storage = new StorageManager('jigaku-coach-v1');
 const app = document.querySelector('#app');
@@ -44,7 +44,7 @@ const RESOURCE_GROUPS = {
   app: { label: '学習アプリで練習したい', icon: '▦' }
 };
 const RESOURCES = [
-  { group: 'video', title: 'NHK for School', desc: '教科や学年から、授業につながる動画や番組を探せます。', url: 'https://www.nhk.or.jp/school/', subject: 'いろいろ' },
+  { group: 'video', title: 'NHK for School', desc: '教科や学年から、授業につながる動画や番組を探せます。', url: 'https://edu.web.nhk/school/', subject: 'いろいろ' },
   { group: 'video', title: 'eboard', desc: '小学生向けの算数・理科・社会・漢字を、映像授業と問題で確かめられます。', url: 'https://www.eboard.jp/list/', subject: '国語・算数・理科・社会' },
   { group: 'practice', title: '東京ベーシック・ドリル（電子版）', desc: '学年と教科を選んで、基礎的な問題に取り組めます。', url: 'https://www.kyoiku.metro.tokyo.lg.jp/school/study_material/improvement/tokyo_basic_drill/about', subject: '国語・算数・社会・理科' },
   { group: 'practice', title: 'eboard', desc: '単元ごとの短い映像と確認問題で、分からないところを戻って確かめられます。', url: 'https://www.eboard.jp/list/', subject: '国語・算数・理科・社会' },
