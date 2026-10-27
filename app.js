@@ -1,5 +1,5 @@
 import { StorageManager } from './vendor/storage-manager.js';
-import { MENUS, MENU_TYPES, SUBJECTS, DATA_COUNTS } from './data/menus.js?v=2';
+import { MENUS, MENU_TYPES, SUBJECTS, DATA_COUNTS } from './data/menus.js?v=3';
 
 const storage = new StorageManager('jigaku-coach-v1');
 const app = document.querySelector('#app');
@@ -123,7 +123,11 @@ const getTests = () => storage.load('tests', []).filter(item => item && item.id 
 const subjectLabel = id => SUBJECTS[id]?.label || id;
 const typeLabel = id => MENU_TYPES[id]?.label || id;
 const difficultyStars = n => '★'.repeat(n);
-const gradeLabel = grades => grades.map(grade => `${grade}年`).join('・');
+const gradeLabel = grades => {
+  const sorted = [...grades].sort((a, b) => a - b);
+  const consecutive = sorted.length > 1 && sorted.every((g, i) => i === 0 || g === sorted[i - 1] + 1);
+  return consecutive ? `${sorted[0]}〜${sorted[sorted.length - 1]}年` : sorted.map(grade => `${grade}年`).join('・');
+};
 const pickHeroImage = () => {
   const candidates = HERO_IMAGES.filter(image => image !== lastHeroImage);
   const image = candidates[Math.floor(Math.random() * candidates.length)] || HERO_IMAGES[0];
@@ -396,7 +400,7 @@ function renderMenus() {
     <div class="filters">
       <input id="menu-search" type="search" placeholder="ことばで探す" value="${esc(state.menuFilters.query)}" aria-label="メニューを検索">
       <select id="filter-grade" aria-label="学年でしぼる"><option value="all" ${state.menuFilters.grade === 'all' ? 'selected' : ''}>すべての学年</option>${[1, 2, 3, 4, 5, 6].map(grade => `<option value="${grade}" ${state.menuFilters.grade === String(grade) ? 'selected' : ''}>${grade}年</option>`).join('')}</select>
-      <select id="filter-subject" aria-label="教科でしぼる"><option value="all">すべての教科</option>${Object.values(SUBJECTS).map(s => `<option value="${s.id}" ${state.menuFilters.subject === s.id ? 'selected' : ''}>${s.label}</option>`).join('')}</select>
+      <select id="filter-subject" aria-label="教科でしぼる"><option value="all">すべての教科</option>${Object.values(SUBJECTS).map(s => { const count = state.menuFilters.grade === 'all' ? DATA_COUNTS[s.id] : MENUS.filter(m => m.subject === s.id && m.grades.includes(Number(state.menuFilters.grade))).length; return `<option value="${s.id}" ${state.menuFilters.subject === s.id ? 'selected' : ''} ${count === 0 ? 'disabled' : ''}>${s.label}（${count}件）</option>`; }).join('')}</select>
       <select id="filter-type" aria-label="型でしぼる"><option value="all">すべての型</option>${Object.values(MENU_TYPES).map(t => `<option value="${t.id}" ${state.menuFilters.type === t.id ? 'selected' : ''}>${t.label}</option>`).join('')}</select>
       <select id="filter-minutes" aria-label="時間でしぼる"><option value="all">すべての時間</option><option value="10" ${state.menuFilters.minutes === '10' ? 'selected' : ''}>10分くらい</option><option value="20" ${state.menuFilters.minutes === '20' ? 'selected' : ''}>20分くらい</option><option value="30" ${state.menuFilters.minutes === '30' ? 'selected' : ''}>じっくり</option></select>
     </div>
@@ -748,7 +752,7 @@ function bindEvents() {
   app.querySelector('#timer-reset')?.addEventListener('click', resetTimer);
   app.querySelector('#timer-minutes')?.addEventListener('change', resetTimer);
   app.querySelector('#menu-search')?.addEventListener('input', event => { state.menuFilters.query = event.target.value; rerenderMenuResults(); });
-  app.querySelector('#filter-grade')?.addEventListener('change', event => { state.menuFilters.grade = event.target.value; render(); });
+  app.querySelector('#filter-grade')?.addEventListener('change', event => { state.menuFilters.grade = event.target.value; if (state.menuFilters.subject !== 'all' && state.menuFilters.grade !== 'all' && !MENUS.some(menu => menu.subject === state.menuFilters.subject && menu.grades.includes(Number(state.menuFilters.grade)))) state.menuFilters.subject = 'all'; render(); });
   app.querySelector('#filter-subject')?.addEventListener('change', event => { state.menuFilters.subject = event.target.value; render(); });
   app.querySelector('#filter-type')?.addEventListener('change', event => { state.menuFilters.type = event.target.value; render(); });
   app.querySelector('#filter-minutes')?.addEventListener('change', event => { state.menuFilters.minutes = event.target.value; render(); });
