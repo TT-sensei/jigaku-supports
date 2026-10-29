@@ -1,5 +1,6 @@
 import { StorageManager } from './vendor/storage-manager.js';
 import { MENUS, MENU_TYPES, SUBJECTS, DATA_COUNTS } from './data/menus.js?v=7';
+import { initFurigana } from './furigana.js';
 
 const storage = new StorageManager('jigaku-coach-v1');
 const app = document.querySelector('#app');
@@ -138,9 +139,10 @@ const PURPOSE_LABEL_G1 = {
   any: '何でもいい！'
 };
 const rubyText = (text, reading) => reading ? `<ruby>${esc(text)}<rt>${esc(reading)}</rt></ruby>` : esc(text);
-const readingGrade1 = () => state.route === 'menus' ? state.menuFilters.grade === '1' : state.grade === 1;
-const subjectLabelHtml = id => rubyText(subjectLabel(id), readingGrade1() ? SUBJECT_READINGS[subjectLabel(id)] : null);
-const typeLabelHtml = id => rubyText(typeLabel(id), readingGrade1() ? TYPE_READINGS[typeLabel(id)] : null);
+// 1年生・2年生のときに読み支援を使う（メニュー画面では絞り込み中の学年を見る）
+const readingGradeLow = () => state.route === 'menus' ? (state.menuFilters.grade === '1' || state.menuFilters.grade === '2') : (state.grade === 1 || state.grade === 2);
+const subjectLabelHtml = id => rubyText(subjectLabel(id), readingGradeLow() ? SUBJECT_READINGS[subjectLabel(id)] : null);
+const typeLabelHtml = id => rubyText(typeLabel(id), readingGradeLow() ? TYPE_READINGS[typeLabel(id)] : null);
 const difficultyStars = n => '★'.repeat(n);
 const gradeLabel = grades => {
   const sorted = [...grades].sort((a, b) => a - b);
@@ -447,9 +449,9 @@ function renderMenus() {
     <div class="filters">
       <input id="menu-search" type="search" placeholder="ことばで探す" value="${esc(state.menuFilters.query)}" aria-label="メニューを検索">
       <select id="filter-grade" aria-label="学年でしぼる"><option value="all" ${state.menuFilters.grade === 'all' ? 'selected' : ''}>すべての学年</option>${[1, 2, 3, 4, 5, 6].map(grade => `<option value="${grade}" ${state.menuFilters.grade === String(grade) ? 'selected' : ''}>${grade}年</option>`).join('')}</select>
-      <select id="filter-subject" aria-label="教科でしぼる"><option value="all">すべての教科</option>${Object.values(SUBJECTS).map(s => { const count = state.menuFilters.grade === 'all' ? DATA_COUNTS[s.id] : MENUS.filter(m => m.subject === s.id && m.grades.includes(Number(state.menuFilters.grade))).length; const label = state.menuFilters.grade === '1' ? `${s.label}（${SUBJECT_READINGS[s.label] || ''}）` : `${s.label}（${count}件）`; return `<option value="${s.id}" ${state.menuFilters.subject === s.id ? 'selected' : ''} ${count === 0 ? 'disabled' : ''}>${label}</option>`; }).join('')}</select>
-      <select id="filter-type" aria-label="型でしぼる"><option value="all">すべての型</option>${Object.values(MENU_TYPES).map(t => `<option value="${t.id}" ${state.menuFilters.type === t.id ? 'selected' : ''}>${state.menuFilters.grade === '1' ? `${t.label}（${TYPE_READINGS[t.label] || ''}）` : t.label}</option>`).join('')}</select>
-      <select id="filter-purpose" aria-label="目的でしぼる"><option value="all">すべての目的</option>${PURPOSE_ORDER.filter(p => MENUS.some(m => m.purposes.includes(p))).map(p => `<option value="${p}" ${state.menuFilters.purpose === p ? 'selected' : ''}>${state.menuFilters.grade === '1' ? (PURPOSE_OPTION_G1[p] || p) : p}</option>`).join('')}</select>
+      <select id="filter-subject" aria-label="教科でしぼる"><option value="all">すべての教科</option>${Object.values(SUBJECTS).map(s => { const count = state.menuFilters.grade === 'all' ? DATA_COUNTS[s.id] : MENUS.filter(m => m.subject === s.id && m.grades.includes(Number(state.menuFilters.grade))).length; const label = ['1','2'].includes(state.menuFilters.grade) ? `${s.label}（${SUBJECT_READINGS[s.label] || ''}）` : `${s.label}（${count}件）`; return `<option value="${s.id}" ${state.menuFilters.subject === s.id ? 'selected' : ''} ${count === 0 ? 'disabled' : ''}>${label}</option>`; }).join('')}</select>
+      <select id="filter-type" aria-label="型でしぼる"><option value="all">すべての型</option>${Object.values(MENU_TYPES).map(t => `<option value="${t.id}" ${state.menuFilters.type === t.id ? 'selected' : ''}>${['1','2'].includes(state.menuFilters.grade) ? `${t.label}（${TYPE_READINGS[t.label] || ''}）` : t.label}</option>`).join('')}</select>
+      <select id="filter-purpose" aria-label="目的でしぼる"><option value="all">すべての目的</option>${PURPOSE_ORDER.filter(p => MENUS.some(m => m.purposes.includes(p))).map(p => `<option value="${p}" ${state.menuFilters.purpose === p ? 'selected' : ''}>${['1','2'].includes(state.menuFilters.grade) ? (PURPOSE_OPTION_G1[p] || p) : p}</option>`).join('')}</select>
       <select id="filter-minutes" aria-label="時間でしぼる"><option value="all">すべての時間</option><option value="10" ${state.menuFilters.minutes === '10' ? 'selected' : ''}>10分くらい</option><option value="20" ${state.menuFilters.minutes === '20' ? 'selected' : ''}>20分くらい</option><option value="30" ${state.menuFilters.minutes === '30' ? 'selected' : ''}>じっくり</option></select>
     </div>
     <p class="result-count" id="menu-result-count">${starter ? '教科ごとの取り組みやすい課題' : `${menus.length}件見つかりました`}</p>
@@ -877,3 +879,5 @@ window.addEventListener('keydown', event => {
 });
 
 render();
+
+initFurigana(document.querySelector('#furigana-toggle'));

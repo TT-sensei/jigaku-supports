@@ -394,3 +394,16 @@ ruby rt {
   font-weight: 600;
   color: #64748b;
 }
+
+.furigana-toggle {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff7e0;
+  padding: 6px 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.furigana-toggle.is-off {
+  background: white;
+  color: #64748b;
+}
