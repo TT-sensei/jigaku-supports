@@ -125,6 +125,22 @@ const getRecords = () => storage.load('records', []).filter(item => item && item
 const getTests = () => storage.load('tests', []).filter(item => item && item.id && item.date).sort((a, b) => a.date.localeCompare(b.date));
 const subjectLabel = id => SUBJECTS[id]?.label || id;
 const typeLabel = id => MENU_TYPES[id]?.label || id;
+// 1年生向けの読み支援（教科・型・目的の表示にだけ使う。通常学年では何も変えない）
+const SUBJECT_READINGS = { '国語': 'こくご', '算数': 'さんすう', '理科': 'りか', '社会': 'しゃかい', '英語': 'えいご', '教科横断': 'きょうかおうだん', '生活': 'せいかつ' };
+const TYPE_READINGS = { '解く型': 'とくがた', 'まとめる型': 'まとめるがた', '調べる型': 'しらべるがた', '覚える型': 'おぼえるがた' };
+const PURPOSE_OPTION_G1 = { '復習': '復習（ふくしゅう）', '覚える': '覚える（おぼえる）', '苦手': '苦手（にがて）', 'テスト': 'テスト', '整理': '整理（せいり）', 'もっと知る': 'もっと知（し）る', '疑問': '疑問（ぎもん）', 'チャレンジ': 'チャレンジ' };
+const PURPOSE_LABEL_G1 = {
+  review: '今日<ruby>習<rt>なら</rt></ruby>ったことをもう一度',
+  weak: '<ruby>苦手<rt>にがて</rt></ruby>なところをやりたい',
+  memorize: '<ruby>覚<rt>おぼ</rt></ruby>えたい',
+  explore: 'もっと<ruby>知<rt>し</rt></ruby>りたい',
+  test: 'テストの<ruby>準備<rt>じゅんび</rt></ruby>',
+  any: '何でもいい！'
+};
+const rubyText = (text, reading) => reading ? `<ruby>${esc(text)}<rt>${esc(reading)}</rt></ruby>` : esc(text);
+const readingGrade1 = () => state.route === 'menus' ? state.menuFilters.grade === '1' : state.grade === 1;
+const subjectLabelHtml = id => rubyText(subjectLabel(id), readingGrade1() ? SUBJECT_READINGS[subjectLabel(id)] : null);
+const typeLabelHtml = id => rubyText(typeLabel(id), readingGrade1() ? TYPE_READINGS[typeLabel(id)] : null);
 const difficultyStars = n => '★'.repeat(n);
 const gradeLabel = grades => {
   const sorted = [...grades].sort((a, b) => a - b);
@@ -248,7 +264,7 @@ function renderDecide() {
     <div class="panel">
       <div class="choice-step active" data-step="1">
         <span class="step-kicker">STEP 1 / 3</span><h2>今日は、どんな感じ？</h2>
-        <div class="choice-grid">${PURPOSES.map(item => `<button class="choice-button ${state.coach.purpose === item.id ? 'selected' : ''}" type="button" data-coach-purpose="${item.id}"><img class="choice-character" src="${IMG_ROOT}characters/${item.character}/expressions/01-normal-smile.webp" alt="" aria-hidden="true"><span class="choice-label">${item.label}</span></button>`).join('')}</div>
+        <div class="choice-grid">${PURPOSES.map(item => `<button class="choice-button ${state.coach.purpose === item.id ? 'selected' : ''}" type="button" data-coach-purpose="${item.id}"><img class="choice-character" src="${IMG_ROOT}characters/${item.character}/expressions/01-normal-smile.webp" alt="" aria-hidden="true"><span class="choice-label">${state.grade === 1 && PURPOSE_LABEL_G1[item.id] ? PURPOSE_LABEL_G1[item.id] : item.label}</span></button>`).join('')}</div>
         <div class="coach-nav"><span></span><button class="primary-button" type="button" data-coach-next="2" ${state.coach.purpose ? '' : 'disabled'}>つぎへ →</button></div>
       </div>
       <div class="choice-step" data-step="2">
@@ -260,7 +276,7 @@ function renderDecide() {
         <span class="step-kicker">STEP 3 / 3</span><h2>教科は決まっている？</h2>
         <div class="choice-grid">
           <button class="choice-button ${state.coach.subject === 'all' ? 'selected' : ''}" type="button" data-coach-subject="all">どの教科でも</button>
-          ${availableSubjects.map(subject => `<button class="choice-button subject-${subject.id} ${state.coach.subject === subject.id ? 'selected' : ''}" type="button" data-coach-subject="${subject.id}">${subject.label}</button>`).join('')}
+          ${availableSubjects.map(subject => `<button class="choice-button subject-${subject.id} ${state.coach.subject === subject.id ? 'selected' : ''}" type="button" data-coach-subject="${subject.id}">${subjectLabelHtml(subject.id)}</button>`).join('')}
         </div>
         <div class="coach-nav"><button class="secondary-button" type="button" data-coach-back="2">← もどる</button><button class="primary-button" type="button" id="show-candidates" ${state.coach.subject ? '' : 'disabled'}>三つ見てみる</button></div>
       </div>
@@ -316,28 +332,34 @@ function recommendationMessage() {
 
 function menuCard(menu) {
   return `<article class="menu-card">
-    <div class="chips"><span class="chip">${subjectLabel(menu.subject)}</span><span class="chip chip-grade">${gradeLabel(menu.grades)}</span><span class="chip type-${menu.type}">${typeLabel(menu.type)}</span><span class="chip">${menu.minutes}分</span><span class="chip" aria-label="手間の目安 ${menu.difficulty}段階">${difficultyStars(menu.difficulty)}</span></div>
+    <div class="chips"><span class="chip">${subjectLabelHtml(menu.subject)}</span><span class="chip chip-grade">${gradeLabel(menu.grades)}</span><span class="chip type-${menu.type}">${typeLabelHtml(menu.type)}</span><span class="chip">${menu.minutes}分</span><span class="chip" aria-label="手間の目安 ${menu.difficulty}段階">${difficultyStars(menu.difficulty)}</span></div>
     <h3>${esc(menu.title)}</h3><p>${esc(menu.whenToUse)}</p>
     <button class="primary-button" type="button" data-menu-id="${menu.id}">これにする</button>
   </article>`;
 }
 
 function renderCandidates() {
-  const notebookGoals = [
+  const grade1 = state.grade === 1;
+  const notebookGoals = grade1 ? [
+    { id: 'self', label: '<ruby>自分<rt>じぶん</rt></ruby>が分かればOK', desc: 'じぶんが 分かることを たいせつに する' },
+    { id: 'review', label: 'あとで<ruby>見返<rt>みかえ</rt></ruby>せるように', desc: '<ruby>大事<rt>だいじ</rt></ruby>なことが のこるノートに する' },
+    { id: 'teach', label: '<ruby>人<rt>ひと</rt></ruby>に<ruby>教<rt>おし</rt></ruby>えられるように', desc: 'じぶんの<ruby>言葉<rt>ことば</rt></ruby>で つたわるノートに する' }
+  ] : [
     { id: 'self', label: '自分が分かればOK', desc: 'まずは自分の理解を大切にする' },
     { id: 'review', label: 'あとで見返せるように', desc: '大事なことが残るノートにする' },
     { id: 'teach', label: '人に教えられるように', desc: '自分の言葉で伝わるノートにする' }
   ];
-  return `<section class="screen">
-    ${screenHead('この三つはどう？', 'どれも正解。やってみたいものを選ぼう。', 'decide')}
-    <p class="recommendation-note">${recommendationMessage()}</p>
-    <div class="notebook-goal-panel">
-      <div><span class="step-kicker">ノートの目標</span><h2>今日は、どこまで伝わるノートにする？</h2><p>きれいさの評価ではなく、「どう学ぶか」を自分で決めよう。</p></div>
+  const goalPanel = `<div class="notebook-goal-panel">
+      <div><span class="step-kicker">${grade1 ? 'ノートの めあて' : 'ノートの目標'}</span><h2>${grade1 ? 'めあては、あとで えらんでも いいよ' : '今日は、どこまで伝わるノートにする？'}</h2><p>${grade1 ? 'さきに「これにする」を えらぼう。めあては、ゆっくりで だいじょうぶ。' : 'きれいさの評価ではなく、「どう学ぶか」を自分で決めよう。'}</p></div>
       <div class="notebook-goal-grid">
         ${notebookGoals.map(goal => `<button class="notebook-goal-button ${state.coach.notebookGoal === goal.id ? 'selected' : ''}" type="button" data-notebook-goal="${goal.id}"><strong>${goal.label}</strong><small>${goal.desc}</small></button>`).join('')}
       </div>
-    </div>
-    <div class="card-grid">${state.candidates.map(menuCard).join('')}</div>
+    </div>`;
+  const candidateCards = `<div class="card-grid">${state.candidates.map(menuCard).join('')}</div>`;
+  return `<section class="screen">
+    ${screenHead('この三つはどう？', 'どれも正解。やってみたいものを選ぼう。', 'decide')}
+    <p class="recommendation-note">${recommendationMessage()}</p>
+    ${grade1 ? candidateCards + goalPanel : goalPanel + candidateCards}
     <div class="coach-nav"><button class="secondary-button" type="button" id="rechoose">ほかの三つを見る</button><button class="secondary-button" type="button" data-route="menus">${MENU_COUNT}のメニューから探す</button></div>
   </section>`;
 }
@@ -398,12 +420,12 @@ function renderMenuResults(menus) {
           ((a.grades.includes(state.grade) ? 0 : 1) - (b.grades.includes(state.grade) ? 0 : 1)) ||
           (Math.min(...a.grades) - Math.min(...b.grades)) ||
           (a.difficulty - b.difficulty) || (a.minutes - b.minutes) || a.id.localeCompare(b.id));
-        return `<section class="menu-subject-group"><div class="menu-subject-heading"><h2>${esc(subjectLabel(subject))}</h2><span>${sorted.length}件</span></div><div class="card-grid">${sorted.map(menuCard).join('')}</div></section>`;
+        return `<section class="menu-subject-group"><div class="menu-subject-heading"><h2>${subjectLabelHtml(subject)}</h2><span>${sorted.length}件</span></div><div class="card-grid">${sorted.map(menuCard).join('')}</div></section>`;
       }).join('');
   }
   return getStarterMenus(menus).map(group => `
     <section class="menu-subject-group">
-      <div class="menu-subject-heading"><h2>${esc(subjectLabel(group.subject))}</h2><span>${group.menus.length}つ</span></div>
+      <div class="menu-subject-heading"><h2>${subjectLabelHtml(group.subject)}</h2><span>${group.menus.length}つ</span></div>
       <div class="card-grid">${group.menus.map(menuCard).join('')}</div>
     </section>`
   ).join('');
@@ -425,9 +447,9 @@ function renderMenus() {
     <div class="filters">
       <input id="menu-search" type="search" placeholder="ことばで探す" value="${esc(state.menuFilters.query)}" aria-label="メニューを検索">
       <select id="filter-grade" aria-label="学年でしぼる"><option value="all" ${state.menuFilters.grade === 'all' ? 'selected' : ''}>すべての学年</option>${[1, 2, 3, 4, 5, 6].map(grade => `<option value="${grade}" ${state.menuFilters.grade === String(grade) ? 'selected' : ''}>${grade}年</option>`).join('')}</select>
-      <select id="filter-subject" aria-label="教科でしぼる"><option value="all">すべての教科</option>${Object.values(SUBJECTS).map(s => { const count = state.menuFilters.grade === 'all' ? DATA_COUNTS[s.id] : MENUS.filter(m => m.subject === s.id && m.grades.includes(Number(state.menuFilters.grade))).length; return `<option value="${s.id}" ${state.menuFilters.subject === s.id ? 'selected' : ''} ${count === 0 ? 'disabled' : ''}>${s.label}（${count}件）</option>`; }).join('')}</select>
-      <select id="filter-type" aria-label="型でしぼる"><option value="all">すべての型</option>${Object.values(MENU_TYPES).map(t => `<option value="${t.id}" ${state.menuFilters.type === t.id ? 'selected' : ''}>${t.label}</option>`).join('')}</select>
-      <select id="filter-purpose" aria-label="目的でしぼる"><option value="all">すべての目的</option>${PURPOSE_ORDER.filter(p => MENUS.some(m => m.purposes.includes(p))).map(p => `<option value="${p}" ${state.menuFilters.purpose === p ? 'selected' : ''}>${p}</option>`).join('')}</select>
+      <select id="filter-subject" aria-label="教科でしぼる"><option value="all">すべての教科</option>${Object.values(SUBJECTS).map(s => { const count = state.menuFilters.grade === 'all' ? DATA_COUNTS[s.id] : MENUS.filter(m => m.subject === s.id && m.grades.includes(Number(state.menuFilters.grade))).length; const label = state.menuFilters.grade === '1' ? `${s.label}（${SUBJECT_READINGS[s.label] || ''}）` : `${s.label}（${count}件）`; return `<option value="${s.id}" ${state.menuFilters.subject === s.id ? 'selected' : ''} ${count === 0 ? 'disabled' : ''}>${label}</option>`; }).join('')}</select>
+      <select id="filter-type" aria-label="型でしぼる"><option value="all">すべての型</option>${Object.values(MENU_TYPES).map(t => `<option value="${t.id}" ${state.menuFilters.type === t.id ? 'selected' : ''}>${state.menuFilters.grade === '1' ? `${t.label}（${TYPE_READINGS[t.label] || ''}）` : t.label}</option>`).join('')}</select>
+      <select id="filter-purpose" aria-label="目的でしぼる"><option value="all">すべての目的</option>${PURPOSE_ORDER.filter(p => MENUS.some(m => m.purposes.includes(p))).map(p => `<option value="${p}" ${state.menuFilters.purpose === p ? 'selected' : ''}>${state.menuFilters.grade === '1' ? (PURPOSE_OPTION_G1[p] || p) : p}</option>`).join('')}</select>
       <select id="filter-minutes" aria-label="時間でしぼる"><option value="all">すべての時間</option><option value="10" ${state.menuFilters.minutes === '10' ? 'selected' : ''}>10分くらい</option><option value="20" ${state.menuFilters.minutes === '20' ? 'selected' : ''}>20分くらい</option><option value="30" ${state.menuFilters.minutes === '30' ? 'selected' : ''}>じっくり</option></select>
     </div>
     <p class="result-count" id="menu-result-count">${starter ? '教科ごとの取り組みやすい課題' : `${menus.length}件見つかりました`}</p>
@@ -523,13 +545,17 @@ function renderCoach() {
   const steps = coachSteps(menu);
   const character = `${IMG_ROOT}characters/kai/fullbody/checking-note.webp`;
   const notebookGoalLabels = { self: '自分が分かればOK', review: 'あとで見返せるように', teach: '人に教えられるように' };
-  const notebookGoal = notebookGoalLabels[state.coach.notebookGoal] || notebookGoalLabels.self;
+  const notebookGoalLabelsG1 = { self: '<ruby>自分<rt>じぶん</rt></ruby>が分かればOK', review: 'あとで<ruby>見返<rt>みかえ</rt></ruby>せるように', teach: '<ruby>人<rt>ひと</rt></ruby>に<ruby>教<rt>おし</rt></ruby>えられるように' };
+  const grade1 = state.grade === 1;
+  const notebookGoal = grade1
+    ? (notebookGoalLabelsG1[state.coach.notebookGoal] || notebookGoalLabelsG1.self)
+    : esc(notebookGoalLabels[state.coach.notebookGoal] || notebookGoalLabels.self);
   return `<section class="screen">
     ${screenHead(menu.title, `${subjectLabel(menu.subject)}・${typeLabel(menu.type)}・${menu.minutes}分くらい`, state.coachBack || (state.candidates.length ? 'candidates' : 'menus'))}
     <div class="coach-layout">
       <article class="coach-card">
-        <header class="coach-card-head"><div class="chips"><span class="chip">${subjectLabel(menu.subject)}</span><span class="chip chip-grade">${gradeLabel(menu.grades)}</span><span class="chip type-${menu.type}">${typeLabel(menu.type)}</span><span class="chip">${difficultyStars(menu.difficulty)} ${menu.difficulty === 1 ? 'すぐできる' : menu.difficulty === 2 ? 'しっかり' : 'チャレンジ'}</span></div><h1>${esc(menu.title)}</h1><p>${esc(menu.instruction)}</p></header>
-        <div class="selected-learning-goal"><span>今日のノートの目標</span><strong>${esc(notebookGoal)}</strong></div>
+        <header class="coach-card-head"><div class="chips"><span class="chip">${subjectLabelHtml(menu.subject)}</span><span class="chip chip-grade">${gradeLabel(menu.grades)}</span><span class="chip type-${menu.type}">${typeLabelHtml(menu.type)}</span><span class="chip">${difficultyStars(menu.difficulty)} ${menu.difficulty === 1 ? 'すぐできる' : menu.difficulty === 2 ? 'しっかり' : 'チャレンジ'}</span></div><h1>${esc(menu.title)}</h1><p>${esc(menu.instruction)}</p></header>
+        <div class="selected-learning-goal"><span>${grade1 ? '今日のノートの めあて' : '今日のノートの目標'}</span><strong>${notebookGoal}</strong></div>
         <ol class="step-list">${steps.map(step => `<li class="step-item"><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p>${step.goal ? `<div class="goal-box"><strong>めあての例</strong><br>「${esc(step.goal)}」</div>` : ''}</li>`).join('')}</ol>
         <div class="study-timer" aria-label="自学タイマー">
           <div class="timer-heading"><span class="timer-icon" aria-hidden="true">⏱</span><div><h2>自学タイマー</h2><p>何分取り組むか、自分で決めよう。</p></div></div>
