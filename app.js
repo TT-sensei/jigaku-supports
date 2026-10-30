@@ -1,5 +1,5 @@
 import { StorageManager } from './vendor/storage-manager.js';
-import { MENUS, MENU_TYPES, SUBJECTS, DATA_COUNTS } from './data/menus.js?v=7';
+import { MENUS, MENU_TYPES, SUBJECTS, DATA_COUNTS, NOTE_EXAMPLES } from './data/menus.js?v=8';
 import { initFurigana } from './furigana.js';
 
 const storage = new StorageManager('jigaku-coach-v1');
@@ -572,6 +572,7 @@ function renderCoach() {
         <div><img src="${character}" alt="ノートを確かめる案内役"><span class="image-fallback" aria-hidden="true">📓</span></div>
         <p class="speech">まずはノートを開こう。</p>
         <div class="material-list"><h3>用意するもの</h3><ul>${menu.materials.map(item => `<li>${esc(item)}</li>`).join('')}</ul></div>
+        ${(() => { const band = state.grade <= 2 ? 'low' : state.grade <= 4 ? 'mid' : 'high'; const ex = NOTE_EXAMPLES[menu.type]?.[band]; return ex ? `<div class="material-list note-example"><h3>ノートの書き方見本</h3><div class="note-paper"><p class="note-paper-title">${esc(ex.title)}</p>${ex.lines.map(line => `<p>${esc(line)}</p>`).join('')}<p class="note-paper-kansou"><span>感想</span>${esc(ex.kansou)}</p></div><p class="note-example-note">書き方の一例だよ。自分の学習に合わせて変えてOK。</p></div>` : ''; })()}
         ${menu.relatedResources.length ? `<div class="material-list"><h3>困ったときの練習</h3><ul>${menu.relatedResources.map(resource => `<li><a href="${resource.url}" target="_blank" rel="noopener">${esc(resource.title)}</a></li>`).join('')}</ul></div>` : ''}
       </aside>
     </div>
