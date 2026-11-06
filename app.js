@@ -162,6 +162,7 @@ function saveSettings() {
 }
 
 function navigate(route, data = {}) {
+  if (route === 'decide') state.dailyRecommendations = buildDailyRecommendations();
   if (route === 'menus' && state.route !== 'menus') {
     state.menuFilters.grade = String(state.grade);
     if (state.menuFilters.subject !== 'all' && !MENUS.some(menu => menu.subject === state.menuFilters.subject && menu.grades.includes(state.grade))) state.menuFilters.subject = 'all';
@@ -242,7 +243,7 @@ function renderHome() {
         <p>今の気持ちや時間に合うものを、三つ提案します。</p><span class="arrow" aria-hidden="true">→</span>
       </button>
       <button class="entrance-card" type="button" data-route="menus">
-        <span class="icon" aria-hidden="true">▤</span><h2>自学メニューから探す</h2><p>${MENU_COUNT}のメニューから、自分で選びたいとき。</p><span class="arrow" aria-hidden="true">→</span>
+        <span class="icon" aria-hidden="true">▤</span><h2>自学の種ライブラリ</h2><p>${MENU_COUNT}のメニューから、教科や学び方で探せます。</p><span class="arrow" aria-hidden="true">→</span>
       </button>
       <button class="entrance-card" type="button" data-route="tests">
         <span class="icon" aria-hidden="true">✓</span><h2>テストに向けて</h2><p>${testHint}</p><span class="arrow" aria-hidden="true">→</span>
@@ -259,7 +260,125 @@ function renderHome() {
   </section>`;
 }
 
+function dailyRecommendationPool() {
+  return MENUS.filter(menu => menu.grades.includes(state.grade));
+}
+
+function chooseRecommendation(pool, usedIds, scoreMenu) {
+  const choices = pool.filter(menu => !usedIds.has(menu.id));
+  if (!choices.length) return null;
+  return choices.map(menu => ({ menu, score: scoreMenu(menu) + Math.random() * 0.35 }))
+    .sort((a, b) => b.score - a.score)[0]?.menu || null;
+}
+
+function buildDailyRecommendations() {
+  const pool = dailyRecommendationPool();
+  const records = getRecords().slice(-20);
+  const recent = records.slice(-8);
+  const last = records.at(-1);
+  const recentIds = new Set(recent.slice(-5).map(record => record.menuId));
+  const usedIds = new Set();
+  const subjectCounts = recent.reduce((counts, record) => {
+    counts[record.subject] = (counts[record.subject] || 0) + 1;
+    return counts;
+  }, {});
+
+  const continuationPool = pool.filter(menu =>
+    (!last || menu.subject === last.subject) &&
+    (menu.purposes.includes('復習') || menu.purposes.includes('苦手') || menu.testRecommended)
+  );
+  const continuation = chooseRecommendation(
+    continuationPool.length ? continuationPool : pool.filter(menu => menu.purposes.includes('復習') || menu.purposes.includes('苦手')),
+    usedIds,
+    menu => {
+      let score = 0;
+      if (last && menu.subject === last.subject) score += 8;
+      if (last?.hadMistake && menu.purposes.includes('苦手')) score += 7;
+      if (last?.reflection === 'hard' && menu.purposes.includes('苦手')) score += 7;
+      if (last?.reflection === 'curious' && menu.purposes.includes('もっと知る')) score += 5;
+      if (menu.purposes.includes('復習')) score += 3;
+      if (menu.difficulty >= 2) score += 1;
+      if (recentIds.has(menu.id)) score -= 12;
+      return score;
+    }
+  );
+  if (continuation) usedIds.add(continuation.id);
+
+  const balance = chooseRecommendation(
+    pool,
+    usedIds,
+    menu => {
+      const count = subjectCounts[menu.subject] || 0;
+      let score = 12 - count * 5;
+      if (!count) score += 5;
+      if (last && menu.subject !== last.subject) score += 4;
+      if (recentIds.has(menu.id)) score -= 12;
+      if (menu.type === 'C') score -= 1;
+      return score;
+    }
+  );
+  if (balance) usedIds.add(balance.id);
+
+  const explorePool = pool.filter(menu =>
+    menu.type === 'C' || menu.purposes.includes('もっと知る') || menu.purposes.includes('疑問')
+  );
+  const explore = chooseRecommendation(
+    explorePool.length ? explorePool : pool,
+    usedIds,
+    menu => {
+      let score = menu.type === 'C' ? 8 : 0;
+      if (menu.purposes.includes('もっと知る')) score += 5;
+      if (menu.purposes.includes('疑問')) score += 4;
+      if (menu.subject === 'cross') score += 3;
+      if (last && menu.subject !== last.subject) score += 2;
+      if (recentIds.has(menu.id)) score -= 12;
+      return score;
+    }
+  );
+
+  const reasons = {
+    continuation: !last
+      ? 'まずは、これまでに習ったことを確かめるところから始めよう。'
+      : last.hadMistake || last.reflection === 'hard'
+        ? '前回、もう一度確かめたいことが見つかったから。'
+        : last.reflection === 'curious'
+          ? '前回の「もっと知りたい」を、もう少し深められるから。'
+          : '前回取り組んだ教科を、別の方法でも確かめられるから。',
+    balance: recent.length
+      ? '最近の学習記録を見て、少し間が空いている教科から選んだよ。'
+      : 'いろいろな教科に触れて、自分に合う学びを見つけよう。',
+    explore: 'これまでの学習を、別の疑問や身近な生活につなげられるよ。'
+  };
+
+  return [
+    { id: 'continuation', label: '授業のつづき', title: 'もう一度、確かめよう', description: '前に学んだことや、少し難しかったことに向き合う', menu: continuation, reason: reasons.continuation },
+    { id: 'balance', label: 'バランスアップ', title: '違う教科にも挑戦しよう', description: '最近あまり取り組んでいない教科にも目を向ける', menu: balance, reason: reasons.balance },
+    { id: 'explore', label: 'たんけん', title: 'もっと知ってみよう', description: '学んだことから、新しい疑問や興味を広げる', menu: explore, reason: reasons.explore }
+  ].filter(item => item.menu);
+}
+
 function renderDecide() {
+  const recommendations = state.dailyRecommendations || (state.dailyRecommendations = buildDailyRecommendations());
+  return `<section class="screen">
+    ${screenHead('今日の自学のヒント', '学習の記録から、今日の候補を三つ用意したよ。理由も見ながら、自分で選ぼう。')}
+    <div class="daily-recommendations">
+      ${recommendations.map(item => `<article class="daily-recommendation recommendation-${item.id}">
+        <div class="daily-recommendation-top"><span class="recommendation-label">${item.label}</span><span class="recommendation-subject">${subjectLabelHtml(item.menu.subject)} ・ ${typeLabelHtml(item.menu.type)} ・ ${item.menu.minutes}分</span></div>
+        <h2>${esc(item.title)}</h2><h3>${esc(item.menu.title)}</h3>
+        <p class="recommendation-description">${esc(item.description)}</p>
+        <p class="recommendation-reason"><strong>この学びを提案した理由</strong>${esc(item.reason)}</p>
+        <button class="primary-button" type="button" data-menu-id="${item.menu.id}" data-recommendation-kind="${item.id}">この学びにする</button>
+      </article>`).join('')}
+    </div>
+    <div class="recommendation-footer">
+      <button class="secondary-button" type="button" id="refresh-recommendations">別の候補を見る</button>
+      <button class="secondary-button" type="button" data-route="menus">自学の種ライブラリから探す</button>
+      <button class="text-button" type="button" data-route="manual-decide">自分で条件を決めて探す</button>
+    </div>
+  </section>`;
+}
+
+function renderManualDecide() {
   const availableSubjects = subjectsForGrade(state.grade);
   return `<section class="screen">
     ${screenHead('今日の自学を決める', '答えは一つではありません。最後は自分で選ぼう。')}
@@ -441,7 +560,7 @@ function renderMenus() {
   const gradeLead = state.menuFilters.grade === 'all' ? 'すべての学年' : `${state.menuFilters.grade}年生`;
   const starter = state.menuFilters.mode === 'starter';
   return `<section class="screen">
-    ${screenHead('自学メニューから探す', `${gradeLead}の課題です。まずは少ない選択肢から、必要なら全体から探せます。`)}
+    ${screenHead('自学の種ライブラリ', `${gradeLead}の課題です。教科・学び方・目的・時間から、自分に合う学びを探せます。`)}
     <div class="menu-mode-switch" role="group" aria-label="メニューの表示方法">
       <button type="button" class="menu-mode-button ${starter ? 'active' : ''}" data-menu-mode="starter" aria-pressed="${starter}"><strong>まずはここから</strong><span>教科ごとに3つまで</span></button>
       <button type="button" class="menu-mode-button ${!starter ? 'active' : ''}" data-menu-mode="all" aria-pressed="${!starter}"><strong>すべてのメニュー</strong><span>${MENU_COUNT}件から探す</span></button>
@@ -542,6 +661,22 @@ function resetTimer() {
   updateTimerView();
 }
 
+function renderRelatedMenus(menu) {
+  const related = MENUS.filter(item =>
+    item.id !== menu.id &&
+    item.grades.includes(state.grade) &&
+    (item.subject === menu.subject || item.purposes.some(purpose => menu.purposes?.includes(purpose)))
+  ).map(item => ({
+    menu: item,
+    score: (item.subject === menu.subject ? 8 : 0) +
+      (item.type === menu.type ? 3 : 0) +
+      (item.purposes.filter(purpose => menu.purposes?.includes(purpose)).length * 2) +
+      (item.difficulty === menu.difficulty ? 1 : 0)
+  })).sort((a, b) => b.score - a.score).slice(0, 3).map(item => item.menu);
+  if (!related.length) return '';
+  return `<div class="material-list related-menu-list"><h3>関連するメニュー</h3><p>同じ教科や学び方から、別のテーマにも広げられるよ。</p><ul>${related.map(item => `<li><button class="related-menu-button" type="button" data-menu-id="${item.id}">${esc(item.title)} <span>→</span></button></li>`).join('')}</ul></div>`;
+}
+
 function renderCoach() {
   const menu = state.activeMenu || MENUS[0];
   const steps = coachSteps(menu);
@@ -558,6 +693,9 @@ function renderCoach() {
       <article class="coach-card">
         <header class="coach-card-head"><div class="chips"><span class="chip">${subjectLabelHtml(menu.subject)}</span><span class="chip chip-grade">${gradeLabel(menu.grades)}</span><span class="chip type-${menu.type}">${typeLabelHtml(menu.type)}</span><span class="chip">${difficultyStars(menu.difficulty)} ${menu.difficulty === 1 ? 'すぐできる' : menu.difficulty === 2 ? 'しっかり' : 'チャレンジ'}</span></div><h1>${esc(menu.title)}</h1><p>${esc(menu.instruction)}</p></header>
         <div class="selected-learning-goal"><span>${grade1 ? '今日のノートの めあて' : '今日のノートの目標'}</span><strong>${notebookGoal}</strong></div>
+        <div class="notebook-process" aria-label="自学ノートの進め方">
+          <span><b>1</b> めあて</span><i>→</i><span><b>2</b> ノートで学ぶ</span><i>→</i><span><b>3</b> 確かめる</span><i>→</i><span><b>4</b> 振り返る</span>
+        </div>
         <ol class="step-list">${steps.map(step => `<li class="step-item"><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p>${step.goal ? `<div class="goal-box"><strong>めあての例</strong><br>「${esc(step.goal)}」</div>` : ''}</li>`).join('')}</ol>
         <div class="study-timer" aria-label="自学タイマー">
           <div class="timer-heading"><span class="timer-icon" aria-hidden="true">⏱</span><div><h2>自学タイマー</h2><p>何分取り組むか、自分で決めよう。</p></div></div>
@@ -574,6 +712,7 @@ function renderCoach() {
         <div class="material-list"><h3>用意するもの</h3><ul>${menu.materials.map(item => `<li>${esc(item)}</li>`).join('')}</ul></div>
         ${(() => { const band = state.grade <= 2 ? 'low' : state.grade <= 4 ? 'mid' : 'high'; const ex = NOTE_EXAMPLES[menu.type]?.[band]; return ex ? `<div class="material-list note-example"><h3>ノートの書き方見本</h3><div class="note-paper"><p class="note-paper-title">${esc(ex.title)}</p>${ex.lines.map(line => `<p>${esc(line)}</p>`).join('')}<p class="note-paper-kansou"><span>感想</span>${esc(ex.kansou)}</p></div><p class="note-example-note">書き方の一例だよ。自分の学習に合わせて変えてOK。</p></div>` : ''; })()}
         ${menu.relatedResources.length ? `<div class="material-list"><h3>困ったときの練習</h3><ul>${menu.relatedResources.map(resource => `<li><a href="${resource.url}" target="_blank" rel="noopener">${esc(resource.title)}</a></li>`).join('')}</ul></div>` : ''}
+        ${renderRelatedMenus(menu)}
       </aside>
     </div>
   </section>`;
@@ -605,12 +744,31 @@ function openFinishModal(menu) {
 function showReflection(modal, menu, hadMistake, duration) {
   const target = modal.querySelector('#finish-next');
   target.innerHTML = `${hadMistake ? '<div class="reflection-box"><strong>間違いは大事なヒント。</strong><p>答えを写すだけでなく、どこで考えが変わったか確かめよう。</p></div>' : ''}
-    <div class="reflection-box"><strong>最後に、ノートで振り返ろう</strong><ul>${menu.reflectionPrompts.map(prompt => `<li>${esc(prompt)}</li>`).join('')}</ul><p>全部書かなくても大丈夫。一つ選ぼう。</p></div>
+    <div class="reflection-box"><strong>最後に、ノートで振り返ろう</strong><ul>${menu.reflectionPrompts.map(prompt => `<li>${esc(prompt)}</li>`).join('')}</ul><p>文章の振り返りはノートに残そう。ここでは、次の学びにつなげる記録を選ぶよ。</p>
+      <strong>今日の学びはどうだった？</strong>
+      <div class="check-options reflection-options">
+        <button type="button" data-reflection="done">できた</button>
+        <button type="button" data-reflection="hard">少し難しかった</button>
+        <button type="button" data-reflection="curious">もっと知りたい</button>
+      </div>
+    </div>
     ${hadMistake ? '<p><strong>間違いを直すところまでできた？</strong></p>' : ''}
-    <button class="primary-button" type="button" id="save-completion">${hadMistake ? '直して、今日はおわり' : '今日はおわり'}</button>`;
+    <button class="primary-button" type="button" id="save-completion" disabled>振り返りを記録する</button>`;
+  let reflection = '';
+  target.querySelectorAll('[data-reflection]').forEach(button => button.addEventListener('click', () => {
+    reflection = button.dataset.reflection;
+    target.querySelectorAll('[data-reflection]').forEach(item => item.classList.toggle('selected', item === button));
+    target.querySelector('#save-completion').disabled = false;
+  }));
   target.querySelector('#save-completion').addEventListener('click', () => {
+    if (!reflection) return;
     const records = getRecords();
-    records.push({ date: todayString(), subject: menu.subject, menuId: menu.id, menuTitle: menu.title, minutes: duration, completed: true });
+    records.push({
+      date: todayString(), subject: menu.subject, menuId: menu.id, menuTitle: menu.title,
+      minutes: duration, completed: true, hadMistake, reflection,
+      notebookGoal: state.coach.notebookGoal,
+      recommendationKind: state.selectedRecommendationKind || ''
+    });
     storage.save('records', records.slice(-500));
     modal.remove();
     showDone(menu);
@@ -711,7 +869,7 @@ function renderDayRecords(records, date) {
   if (!dayRecords.length) return `<div class="day-record-heading"><h3>${esc(heading)}</h3><span>まだ記録はありません</span></div><p class="day-record-empty">この日はこれから。自分のペースで、またノートに足あとを残そう。</p>`;
   return `<div class="day-record-heading"><h3>${esc(heading)}</h3><span>${dayRecords.length}件の記録</span></div><div class="day-record-list">${dayRecords.map(record => {
     const menu = MENUS.find(item => item.id === record.menuId);
-    return `<article class="day-record-item"><span class="day-record-mark" aria-hidden="true">✓</span><div><h4>${menu ? esc(menu.title) : esc(record.menuTitle || '自学メニュー')}</h4><p>${esc(subjectLabel(record.subject))} ・ ${esc(record.minutes)}分くらい</p></div></article>`;
+    return `<article class="day-record-item"><span class="day-record-mark" aria-hidden="true">✓</span><div><h4>${menu ? esc(menu.title) : esc(record.menuTitle || '自学メニュー')}</h4><p>${esc(subjectLabel(record.subject))} ・ ${esc(record.minutes)}分くらい${record.reflection ? ' ・ ' + (record.reflection === 'done' ? 'できた' : record.reflection === 'hard' ? '少し難しかった' : 'もっと知りたい') : ''}</p></div></article>`;
   }).join('')}</div>`;
 }
 
@@ -760,7 +918,7 @@ function renderResources() {
 }
 
 function render() {
-  const views = { home: renderHome, decide: renderDecide, candidates: renderCandidates, menus: renderMenus, coach: renderCoach, guide: renderGuide, tests: renderTests, records: renderRecords, resources: renderResources };
+  const views = { home: renderHome, decide: renderDecide, 'manual-decide': renderManualDecide, candidates: renderCandidates, menus: renderMenus, coach: renderCoach, guide: renderGuide, tests: renderTests, records: renderRecords, resources: renderResources };
   app.innerHTML = (views[state.route] || renderHome)();
   bindEvents();
   app.querySelectorAll('img').forEach(img => img.addEventListener('error', imageFallback, { once: true }));
@@ -773,7 +931,8 @@ function bindEvents() {
     clearInterval(timerState.interval);
     state.activeMenu = MENUS.find(menu => menu.id === button.dataset.menuId);
     timerState = freshTimerState(state.activeMenu?.minutes || 30);
-    state.coachBack = null;
+    state.selectedRecommendationKind = button.dataset.recommendationKind || '';
+    state.coachBack = state.route === 'decide' ? 'decide' : null;
     navigate('coach');
   }));
   app.querySelectorAll('[data-coach-purpose]').forEach(button => button.addEventListener('click', () => {
@@ -796,6 +955,10 @@ function bindEvents() {
   app.querySelectorAll('[data-coach-next]').forEach(button => button.addEventListener('click', () => showCoachStep(Number(button.dataset.coachNext))));
   app.querySelectorAll('[data-coach-back]').forEach(button => button.addEventListener('click', () => showCoachStep(Number(button.dataset.coachBack))));
   app.querySelector('#show-candidates')?.addEventListener('click', chooseCandidates);
+  app.querySelector('#refresh-recommendations')?.addEventListener('click', () => {
+    state.dailyRecommendations = buildDailyRecommendations();
+    render();
+  });
   app.querySelectorAll('[data-notebook-goal]').forEach(button => button.addEventListener('click', () => {
     state.coach.notebookGoal = button.dataset.notebookGoal;
     app.querySelectorAll('[data-notebook-goal]').forEach(item => item.classList.toggle('selected', item === button));
