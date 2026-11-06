@@ -415,3 +415,34 @@ ruby rt {
 .note-example .note-paper .note-paper-kansou { margin-top: 6px; }
 .note-example .note-paper .note-paper-kansou span { display: inline-block; background: #e8f1fb; color: #1663a6; border-radius: 999px; padding: 0 8px; margin-right: 6px; font-size: .75rem; font-weight: 700; line-height: 20px; vertical-align: 3px; }
 .note-example .note-example-note { margin: 8px 0 0; color: var(--muted); font-size: .8rem; }
+
+
+/* Daily learning recommendations: three purposeful choices, not an open-ended menu. */
+.daily-recommendations{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0}
+.daily-recommendation{display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding:18px;border:1px solid var(--line);border-radius:18px;background:#fff;min-width:0}
+.daily-recommendation h2{margin:2px 0 0;font-size:1.12rem;line-height:1.4}
+.daily-recommendation h3{margin:0;font-size:1.02rem;line-height:1.5}
+.daily-recommendation-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:7px;width:100%}
+.recommendation-label{display:inline-flex;align-items:center;padding:5px 10px;border-radius:999px;background:#edf2f8;color:#35536e;font-size:.78rem;font-weight:800}
+.recommendation-balance .recommendation-label{background:#edf4e9;color:#456444}
+.recommendation-explore .recommendation-label{background:#f4eef8;color:#6a4e7d}
+.recommendation-subject{font-size:.75rem;color:var(--muted)}
+.recommendation-description{margin:0;color:var(--muted);font-size:.86rem;line-height:1.55}
+.recommendation-reason{margin:0;padding:10px 11px;border-radius:10px;background:#f7f6f1;color:#53606b;font-size:.8rem;line-height:1.55;width:100%;box-sizing:border-box}
+.recommendation-reason strong{display:block;margin-bottom:3px;color:var(--ink);font-size:.76rem}
+.daily-recommendation .primary-button{width:100%;margin-top:auto}
+.recommendation-footer{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin:18px 0 8px}
+.text-button{border:0;background:transparent;color:var(--muted);padding:10px 12px;font:inherit;font-size:.88rem;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.text-button:hover{color:var(--ink)}
+.notebook-process{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;margin:12px 0 18px;padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:#f8f7f2;color:#425466;font-size:.8rem}
+.notebook-process span{display:inline-flex;align-items:center;gap:5px;font-weight:700}
+.notebook-process b{display:grid;place-items:center;width:21px;height:21px;border-radius:50%;background:#e5edf5;color:#385c7b;font-size:.72rem}
+.notebook-process i{color:#9aa4ad;font-style:normal}
+.related-menu-list>p{margin:0 0 8px;color:var(--muted);font-size:.78rem;line-height:1.5}
+.related-menu-button{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;padding:8px 0;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.related-menu-button:hover{color:var(--green-dark)}
+.related-menu-button span{flex:0 0 auto;color:var(--muted)}
+.reflection-options{flex-wrap:wrap}
+.reflection-options button{flex:1 1 110px}
+@media(max-width:900px){.daily-recommendations{grid-template-columns:1fr}.daily-recommendation{padding:16px}.recommendation-footer{align-items:stretch}.recommendation-footer button{flex:1 1 180px}}
+@media(max-width:600px){.notebook-process{justify-content:flex-start;gap:6px;font-size:.72rem}.notebook-process i{font-size:.7rem}.recommendation-footer{flex-direction:column}.recommendation-footer button{width:100%}}
