@@ -285,7 +285,8 @@ function buildDailyRecommendations() {
 
   const continuationPool = pool.filter(menu =>
     (!last || menu.subject === last.subject) &&
-    (menu.purposes.includes('復習') || menu.purposes.includes('苦手') || menu.testRecommended)
+    (menu.purposes.includes('復習') || menu.purposes.includes('苦手') || menu.testRecommended ||
+      (last?.reflection === 'curious' && (menu.purposes.includes('もっと知る') || menu.purposes.includes('疑問'))))
   );
   const continuation = chooseRecommendation(
     continuationPool.length ? continuationPool : pool.filter(menu => menu.purposes.includes('復習') || menu.purposes.includes('苦手')),
@@ -304,8 +305,9 @@ function buildDailyRecommendations() {
   );
   if (continuation) usedIds.add(continuation.id);
 
+  const balancePool = pool.filter(menu => !continuation || menu.subject !== continuation.subject);
   const balance = chooseRecommendation(
-    pool,
+    balancePool.length ? balancePool : pool,
     usedIds,
     menu => {
       const count = subjectCounts[menu.subject] || 0;
@@ -322,8 +324,10 @@ function buildDailyRecommendations() {
   const explorePool = pool.filter(menu =>
     menu.type === 'C' || menu.purposes.includes('もっと知る') || menu.purposes.includes('疑問')
   );
+  const earlierSubjects = new Set([continuation?.subject, balance?.subject].filter(Boolean));
+  const diverseExplorePool = explorePool.filter(menu => !earlierSubjects.has(menu.subject));
   const explore = chooseRecommendation(
-    explorePool.length ? explorePool : pool,
+    diverseExplorePool.length ? diverseExplorePool : (explorePool.length ? explorePool : pool),
     usedIds,
     menu => {
       let score = menu.type === 'C' ? 8 : 0;
@@ -331,7 +335,8 @@ function buildDailyRecommendations() {
       if (menu.purposes.includes('疑問')) score += 4;
       if (menu.subject === 'cross') score += 3;
       if (last && menu.subject !== last.subject) score += 2;
-      if (recentIds.has(menu.id)) score -= 12;
+      if (earlierSubjects.size && !earlierSubjects.has(menu.subject)) score += 5;
+      if (recentIds.has(menu.id)) score -= 18;
       return score;
     }
   );
