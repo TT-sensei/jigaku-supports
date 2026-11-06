@@ -228,8 +228,8 @@ function renderHome() {
     <div class="hero">
       <div>
         <span class="eyebrow">TODAY'S JIGAKU</span>
-        <h1>今日は、どんな学習にする？</h1>
-        <p>自分で決めたら、ノートを開いて始めよう。</p>
+        <h1>今日の学びを選ぼう</h1>
+        <p>三つのヒントを見て、自分に合う学びを決めよう。</p>
       </div>
       <div>
         <img class="hero-image" src="${pickHeroImage()}" alt="二人で学習している様子">
@@ -275,7 +275,7 @@ function buildDailyRecommendations() {
   const pool = dailyRecommendationPool();
   const records = getRecords().slice(-20);
   const recent = records.slice(-8);
-  const last = records.at(-1);
+  const last = records[records.length - 1] || null;
   const recentIds = new Set(recent.slice(-5).map(record => record.menuId));
   const usedIds = new Set();
   const subjectCounts = recent.reduce((counts, record) => {
