@@ -436,6 +436,7 @@ function chooseCandidates() {
     picks.push(item.menu);
   }
   if (picks.length < 3) scored.forEach(item => { if (picks.length < 3 && !picks.includes(item.menu)) picks.push(item.menu); });
+  state.candidateSource = state.route === 'candidates' ? (state.candidateSource || 'decide') : state.route;
   state.candidates = picks;
   navigate('candidates');
 }
@@ -478,7 +479,7 @@ function renderCandidates() {
     </div>`;
   const candidateCards = `<div class="card-grid">${state.candidates.map(menuCard).join('')}</div>`;
   return `<section class="screen">
-    ${screenHead('この三つはどう？', 'どれも正解。やってみたいものを選ぼう。', 'decide')}
+    ${screenHead('この三つはどう？', 'どれも正解。やってみたいものを選ぼう。', state.candidateSource === 'manual-decide' ? 'manual-decide' : 'decide')}
     <p class="recommendation-note">${recommendationMessage()}</p>
     ${grade1 ? candidateCards + goalPanel : goalPanel + candidateCards}
     <div class="coach-nav"><button class="secondary-button" type="button" id="rechoose">ほかの三つを見る</button><button class="secondary-button" type="button" data-route="menus">${MENU_COUNT}のメニューから探す</button></div>
@@ -928,11 +929,17 @@ function bindEvents() {
   app.querySelectorAll('[data-route]').forEach(button => button.addEventListener('click', () => navigate(button.dataset.route)));
   app.querySelectorAll('[data-menu-mode]').forEach(button => button.addEventListener('click', () => { state.menuFilters.mode = button.dataset.menuMode; render(); }));
   app.querySelectorAll('[data-menu-id]').forEach(button => button.addEventListener('click', () => {
+    const returnRoute = state.route === 'coach'
+      ? (state.coachBack || (state.candidates.length ? 'candidates' : 'menus'))
+      : state.route === 'decide' ? 'decide'
+        : state.route === 'manual-decide' ? 'manual-decide'
+          : state.route === 'candidates' ? 'candidates'
+            : state.route === 'menus' ? 'menus' : null;
     clearInterval(timerState.interval);
     state.activeMenu = MENUS.find(menu => menu.id === button.dataset.menuId);
     timerState = freshTimerState(state.activeMenu?.minutes || 30);
     state.selectedRecommendationKind = button.dataset.recommendationKind || '';
-    state.coachBack = state.route === 'decide' ? 'decide' : null;
+    state.coachBack = returnRoute;
     navigate('coach');
   }));
   app.querySelectorAll('[data-coach-purpose]').forEach(button => button.addEventListener('click', () => {
